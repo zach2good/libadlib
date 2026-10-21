@@ -1,0 +1,6 @@
+DECLARE_LOCAL_REALS 2 "Speed" "Angle"
+DECLARE_BEHAVIOR 2 id_BEH_Walk "Idle"
+	SET_INTERACTOR_PARAM 3 id_SET_InteractorName "OnPing"
+	DO_ACTION 3 id_ACF_SetPose "speed" "ANGLE"
+	DO_ACTION 2 id_ACF_SetPose "onping"
+END_PLAN

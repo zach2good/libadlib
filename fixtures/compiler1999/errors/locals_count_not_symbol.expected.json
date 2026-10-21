@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "locals_count_not_symbol.txt:2: error [compile/undefined] (byte 37): local-real count 'id_ACF_PlayTone' is not a number: the original reads an uninitialised count",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler emits uninitialised memory on this input)",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "locals_count_not_symbol.txt:2: error [compile/throw] (byte 37): expected arg enumeration of localvars.",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "locals_count_not_symbol.txt:2: error [compile/undefined] (byte 37): local-real count 'id_ACF_PlayTone' is not a number: the original reads an uninitialised count",
+    "pbn_sha256": null
+  }
+}

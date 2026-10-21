@@ -5,7 +5,8 @@ inside HyperBlade's executable) accepts and translates it. It contains **only ru
 that compiler**: every rule is marked **CONFIRMED BY ORACLE** and names the fixtures that prove it.
 Inferred conventions, speculation and the 1996 article's different notation are research material
 ([research/grammar.md](research/grammar.md), [research/article-1996.md](research/article-1996.md)).
-The implementation is `adlibc` ([adlibc.md](adlibc.md)).
+The implementation is `adlibc` ([adlibc.md](adlibc.md)). The 1998 and 1999 languages of the
+Baseball games are specified as changes to this one in [language-1999.md](language-1999.md).
 
 **How a rule is confirmed.** Each rule was confirmed by running the original 1996 compiler (the
 routine inside HyperBlade's executable, under emulation; the *oracle*) on test sources. A fixture

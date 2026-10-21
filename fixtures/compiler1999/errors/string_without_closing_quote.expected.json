@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "string_without_closing_quote.txt:2: error [compile/undefined] (byte 38): string \"Idle has no closing quote; the original reads on into stale stack bytes",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler emits uninitialised memory on this input)",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "string_without_closing_quote.txt:2: error [compile/throw] (byte 38): Inability to read string: \"Idle",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "string_without_closing_quote.txt:2: error [compile/undefined] (byte 38): string \"Idle has no closing quote; the original reads on into stale stack bytes",
+    "pbn_sha256": null
+  }
+}

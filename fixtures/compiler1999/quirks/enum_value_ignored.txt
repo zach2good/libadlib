@@ -1,0 +1,2 @@
+DataBlock 2 id_AGD_Dummy id_AGD_NUMRESAGDIDS
+END_PLAN

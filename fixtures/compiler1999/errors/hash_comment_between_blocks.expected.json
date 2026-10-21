@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "hash_comment_between_blocks.txt:1: error [compile/crash] (byte 0): blocks or comments nested more than 1200 deep overflow the original's stack (the braced emitter recurses for each)",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler crashes on this input)",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "crash",
+    "diagnostic": "hash_comment_between_blocks.txt: crash: compile: Invalid memory write (UC_ERR_WRITE_UNMAPPED) at 0x60fb9b",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "hash_comment_between_blocks.txt:1: error [compile/crash] (byte 0): blocks or comments nested more than 1200 deep overflow the original's stack (the braced emitter recurses for each)",
+    "pbn_sha256": null
+  }
+}

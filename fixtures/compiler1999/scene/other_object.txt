@@ -1,0 +1,3 @@
+// object 1
+DataBlock 3 id_MSG_Swing id_MSG_Bounce id_MSG_Catch
+END_PLAN

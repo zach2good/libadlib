@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "bad_number.txt:2: error [compile/throw] (byte 17): Bad number in plan: ",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "bad_number.txt:2: error [compile/throw] (byte 17): Bad number in plan: ",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "bad_number.txt:2: error [compile/throw] (byte 17): Bad number in plan:",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

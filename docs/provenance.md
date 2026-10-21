@@ -18,6 +18,8 @@ reconstruction of that system from the shipped game, plus new tooling.
 |---|---|---|
 | HyperBlade's executable, `HYPERX.EXE` (PE timestamp 1996-10-21) | the compiler (`CPlanCompiler`, 0x487790..0x48a900) and the runtime were read from it by static analysis; its compiler routine, run under emulation, produced every compatibility expectation | no: identified by hash only |
 | HyperBlade's data (symbol files, 32 compiled plans) | the vocabulary format; the shipped plans as compatibility targets | no |
+| Microsoft Baseball 2000's executable, `Baseball2000.exe` (PE timestamp 1999-03-26) | the 1999 compiler (0x60EC90..0x6143E0) and runtime, read by static analysis; the compiler, run under emulation, produced every expectation in `fixtures/compiler1999/` | no: identified by hash only |
+| Microsoft Baseball 3D (1998 trial and 1998 Edition), Baseball 2000 and 2001: compiled plans, scenes, symbol files; the 1998 Edition's plan sources and stadium definitions | the 1998 and 1999 dialects' compatibility targets ([dialects.md](dialects.md)) | no |
 | Rosen & Duisberg's 1996 article | the system's name and structure, the vending-machine example, the networking model | short quotations in [research/article-1996.md](research/article-1996.md) |
 
 The executable all evidence refers to:
@@ -27,6 +29,14 @@ The executable all evidence refers to:
 | File | `HYPERX.EXE`, 1,359,872 bytes, CD file date 1996-10-21 |
 | SHA-256 | `08c7b7a462847089d41a4e3ac0d61df3409ec8c9107cb97deff08364c4c0de60` |
 | PE TimeDateStamp | `0x326BCBDE` = 1996-10-21 19:15:42 UTC |
+
+and, for the 1998 and 1999 dialects:
+
+| | |
+|---|---|
+| File | `Baseball2000.exe` (Microsoft Baseball 2000), 2,629,632 bytes |
+| SHA-256 | `40fde7a85ce680b41d60b9250bb0fcaafa360d669d533dc4024de85f74a3a7cd` |
+| PE TimeDateStamp | `0x36FAF3DD` = 1999-03-26 02:41:33 UTC |
 
 ## Methodology
 
@@ -50,6 +60,11 @@ The executable all evidence refers to:
    shipped plans in a source port of the game, then made independent of the game.
 6. **The tools** (decompiler, graphs, lint, trace) are new; the decompiler was verified by
    recompiling its output of the 32 shipped plans through both compilers.
+7. **The 1998 and 1999 dialects** followed the same method with Baseball 2000's compiler: static
+   analysis ([research/binary-evidence-1999.md](research/binary-evidence-1999.md)), the same kind
+   of emulation harness, a fixture corpus and differential fuzzing
+   ([compatibility.md](compatibility.md) §4). The Baseball 3D 1998 disc's own plan sources tested
+   the 1998 dialect against real source text.
 
 ## The 1996 article versus the shipped compiler
 
@@ -61,7 +76,7 @@ presentation pseudocode or an earlier dialect is unresolved:
 
 ## What the package contains
 
-No files, code, vocabulary or plans of the game. The research notes (`docs/research/`) discuss the
+No files, code, vocabulary or plans of the games. The research notes (`docs/research/`) discuss the
 executable and cite some of the game's symbol names as evidence; the compiler emulates the 1996
 machine's table layout, buffer sizes and diagnostic texts, which is what byte-exact compatibility
 means.

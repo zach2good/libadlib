@@ -1,6 +1,7 @@
-// adlib-tools unit tests (ctest: adlib_tools_test); no external data.
+// adlib-tools unit tests (ctest: adlib_tools_test FIXTURES); no external data.
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -196,9 +197,172 @@ static void testVending() {
     CHECK(!f.parse("bogus=1", &err));
 }
 
-int main() {
+// Every plan the 1999 corpus accepts decompiles, in its dialect, to source that recompiles to the
+// same bytes: SendMessage targets, scene messages, pronoun tags, CHANGE_TO_NEW_BEHAVIOR.
+static void testLaterRoundTrip(const std::string &fixtures, Compat compat, bool braced) {
+    std::string vocab = fixtures + "/vocab1999", err;
+    CompilerScene scene;
+    CHECK(loadSceneFile(vocab + "/scene.sbn", scene, &err));
+    SymbolTable plainNames, sceneNames;
+    plainNames.compat = sceneNames.compat = compat;
+    CHECK(loadSymbolsDir(plainNames, vocab, &err));
+    CHECK(loadSymbolsDir(sceneNames, vocab, &err, &scene));
+    CompilerSymbols plain = CompilerSymbols::fromDataDir(vocab, compat, &err);
+    CompilerSymbols withScene = CompilerSymbols::fromDataDir(vocab, compat, &err, &scene);
+    int tried = 0, same = 0, bracedBlocks = 0;
+    for (const char *kind : {"valid", "quirks", "scene"}) {
+        std::vector<fs::path> files;
+        for (auto &de : fs::directory_iterator(fixtures + "/compiler1999/" + kind))
+            if (de.path().extension() == ".txt") files.push_back(de.path());
+        std::sort(files.begin(), files.end());
+        for (const fs::path &f : files) {
+            std::string src = readText(f.string());
+            CompileOptions o;
+            o.compat = compat;
+            o.planSource = [&](const std::string &n) -> std::optional<std::string> {
+                std::string t = readText(fixtures + "/compiler1999/plans/" + n + ".txt");
+                if (t.empty()) return std::nullopt;
+                return t;
+            };
+            bool sceneCase = src.rfind("// object ", 0) == 0;
+            if (sceneCase) {
+                o.scene = &scene;
+                o.object = int16_t(std::atoi(src.c_str() + 10));
+            }
+            CompileResult a = compilePlan(src, sceneCase ? withScene : plain, o);
+            if (!a.ok) continue; // e.g. SET_AGENDA_ITEM_PARAM under 1998
+            PlanTree tree;
+            if (!buildPlanTree(a.words, LoadHooks{}, tree, &err)) continue; // a quirk: counts that build no tree
+            ++tried;
+            DecompileOptions d;
+            d.planName = f.stem().string();
+            d.scene = o.scene;
+            d.object = o.object;
+            d.braced = braced;
+            std::string text;
+            std::vector<uint32_t> words(a.words.begin(), a.words.end());
+            words.resize(size_t(std::find(words.begin(), words.end(), 0xFFFF0000u) - words.begin()) + 1);
+            bool ok = decompile(words, sceneCase ? sceneNames : plainNames, d, text, &err);
+            CompileResult b = ok ? compilePlan(text, sceneCase ? withScene : plain, o) : CompileResult{};
+            // The header counts dwords after END_PLAN, which no source can say again.
+            ok = ok && b.ok && std::vector<uint8_t>(b.pbn.begin() + 4, b.pbn.end()) == std::vector<uint8_t>(a.pbn.begin() + 4, a.pbn.end());
+            if (!ok) std::fprintf(stderr, "%s round trip %s: %s\n%s\n", compatName(compat), f.string().c_str(), err.c_str(), text.c_str());
+            same += ok;
+            bracedBlocks += ok && text.find("\n{") != std::string::npos;
+        }
+    }
+    CHECK(tried > 30 && same == tried);
+    CHECK(!braced || bracedBlocks > 20);
+    std::printf("%s%s decompile round trip: %d/%d (%d with braced blocks)\n", compatName(compat), braced ? " braced" : "",
+                same, tried, bracedBlocks);
+
+    // The decompiler's spellings: pronoun tags by name, a broadcast target as a number, a scene
+    // object and its message by name.
+    CompileOptions o;
+    o.compat = compat;
+    o.scene = &scene;
+    o.object = 1;
+    CompileResult r = compilePlan("DO_ACTION 4 id_ACF_SendMessage _BROADCAST_ id_MSG_Swing 3\n"
+                                  "DO_ACTION 3 id_ACF_SendMessage id_MOD_Batter id_MSG_Catch\n"
+                                  "DataBlock 2 id_PRN_Target id_PRT_ViewOwner END_PLAN\n", withScene, o);
+    CHECK(r.ok);
+    DecompileOptions d;
+    d.scene = &scene;
+    d.object = 1;
+    std::string text;
+    CHECK(decompile(r.words, sceneNames, d, text, &err));
+    CHECK(contains(text, "id_ACF_SendMessage 65535"));
+    CHECK(contains(text, "id_ACF_SendMessage id_MOD_Batter id_MSG_")); // the main table's names come first
+    CHECK(contains(text, "id_PRN_Target id_PRT_ViewOwner"));
+    // A plan the 1998 compiler cannot express.
+    if (compat == Compat::Adlib1998) {
+        auto bad = encodePlan(build::list(build::make(SET_AGENDA_ITEM_PARAM, build::args(build::lit(2))), build::endPlan()));
+        CHECK(!decompile(bad, plainNames, DecompileOptions{}, text, &err) && contains(err, "not a keyword of adlib1998"));
+    }
+    CHECK(!parseScene("not a scene", scene, &err) && !err.empty());
+}
+
+// The checks decompile makes on its own output (DecompileOptions::verify), and the limits it keeps.
+static void testVerify(const std::string &fixtures) {
+    std::string vocab = fixtures + "/vocab1999";
+    std::string err;
+    std::string text;
+    SymbolTable names;
+    names.compat = Compat::Adlib1999;
+    CompilerSymbols compiler;
+    CHECK(loadSymbolsDir(names, vocab, &err, nullptr, &compiler));
+    CompileOptions co;
+    co.compat = Compat::Adlib1999;
+    DecompileOptions d;
+    d.verify = &compiler;
+
+    // Every dword is compared, those after END_PLAN too.
+    CompileResult plan = compilePlan("DataBlock 2 1 5\nEND_PLAN\n", compiler, co);
+    CHECK(plan.ok);
+    for (uint32_t extra : {5u, 0xFFFFFFFFu, 0x10000u, 0xFEDD0000u}) {
+        std::vector<uint32_t> w = plan.words;
+        w.push_back(extra);
+        if (!decompile(w, names, d, text, &err)) {
+            CHECK(contains(err, "not expressible"));
+            continue;
+        }
+        CompileResult again = compilePlan(text, compiler, co);
+        CHECK(again.ok && again.words == w);
+    }
+
+    // The header comment is added after the check, so it cannot push the source over the limit.
+    auto statements = [](int k) {
+        std::string s;
+        for (int i = 0; i < k; ++i) s += "DataBlock 2 1 5\n";
+        return s + "END_PLAN\n";
+    };
+    auto bodySize = [&](int k) {
+        DecompileOptions bare;
+        bare.header = false;
+        std::string t;
+        decompile(compilePlan(statements(k), compiler, co).words, names, bare, t, &err);
+        return t.size();
+    };
+    const size_t line = bodySize(2) - bodySize(1);
+    const int k = int((kMaxCompilerSource1999 - 100 - bodySize(0)) / line);
+    CompileResult big = compilePlan(statements(k), compiler, co);
+    CHECK(big.ok && decompile(big.words, names, d, text, &err));
+    CHECK(text.size() > kMaxCompilerSource1999 && contains(err, "warning:"));
+
+    // From 1998 a declaration without its name shifts the later ones, so none are named.
+    const std::vector<uint32_t> unnamed = {kTokNode, DECLARE_BEHAVIOR, 2, 0, 7,
+                                           kTokNode, DECLARE_BEHAVIOR, 2, 0, kTokString, 'B', 0,
+                                           kTokNode, END_PLAN};
+    CHECK(behaviourNames(unnamed) == std::vector<std::string>{"B"});
+    CHECK(behaviourNames(unnamed, Compat::Adlib1999).empty());
+
+    // A CHANGE_OF_PLAN name of 40 characters or more reaches the sibling lookup changed: no name.
+    const std::string longName(45, 'L');
+    const std::map<std::string, std::vector<std::string>> siblings = {{longName, {"A", "B"}}, {"SHORT", {"A", "B"}}};
+    DecompileOptions named;
+    named.planBehaviours = &siblings;
+    for (const std::string &plan : {longName, std::string("SHORT")}) {
+        CompileResult c = compilePlan("CHANGE_OF_PLAN 2 \"" + plan + "\" 1\nEND_PLAN\n", compiler, co);
+        CHECK(c.ok && decompile(c.words, names, named, text, &err));
+        CHECK(contains(text, "\"B\"") == (plan == "SHORT"));
+    }
+
+    // A count claiming more statements than the stream holds is an error, not the plan's end.
+    const std::vector<uint32_t> cut = {kTokNode, BLOCK, 2, kTokNode, DATA_BLOCK, 1, 5};
+    CHECK(!decompile(cut, names, DecompileOptions{}, text, &err) && contains(err, "truncated"));
+}
+
+int main(int argc, char **argv) {
     testFloats();
     testVending();
+    CHECK(argc > 1); // ctest passes the fixtures directory
+    if (argc > 1) {
+        for (bool braced : {false, true}) {
+            testLaterRoundTrip(argv[1], Compat::Adlib1999, braced);
+            testLaterRoundTrip(argv[1], Compat::Adlib1998, braced);
+        }
+        testVerify(argv[1]);
+    }
     if (failures) std::fprintf(stderr, "%d failure(s)\n", failures);
     else std::printf("adlib_tools_test: ok\n");
     return failures ? 1 : 0;

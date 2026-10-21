@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "behaviour_without_name.txt:2: error [compile/hang] (byte 37): the source ends while the prescan looks for a behaviour's quoted name (the original compiler would hang)",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler hangs on this input)",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "hang",
+    "diagnostic": "behaviour_without_name.txt: hang: compile",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "behaviour_without_name.txt:2: error [compile/hang] (byte 37): the source ends while the prescan looks for a behaviour's quoted name (the original compiler would hang)",
+    "pbn_sha256": null
+  }
+}

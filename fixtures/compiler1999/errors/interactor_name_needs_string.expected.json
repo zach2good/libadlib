@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "interactor_name_needs_string.txt:2: error [compile/throw] (byte 51): Expected a string name in Behavior Declaration.\n",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "interactor_name_needs_string.txt:2: error [compile/throw] (byte 51): Expected a string name in Behavior Declaration.\n",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "interactor_name_needs_string.txt:2: error [compile/throw] (byte 51): Expected a string name in Behavior Declaration.",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

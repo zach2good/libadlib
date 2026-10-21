@@ -1,0 +1,33 @@
+{
+  "outcome": "accepted",
+  "diagnostic": null,
+  "pbn_sha256": "d7ed048b218250a72c61e1fc821eeead4c0e94cb5ac5722383a0c52796464c44",
+  "expected_from": "oracle",
+  "pbn_words": [
+    "0000000a",
+    "abcdefff",
+    "20000000",
+    "00000005",
+    "00000000",
+    "00000001",
+    "00000002",
+    "00000007",
+    "00000009",
+    "abcdefff",
+    "ffff0000"
+  ],
+  "scene": "scene.sbn",
+  "object": 0,
+  "oracle": {
+    "outcome": "accepted",
+    "kind": null,
+    "diagnostic": null,
+    "pbn_sha256": "d7ed048b218250a72c61e1fc821eeead4c0e94cb5ac5722383a0c52796464c44"
+  },
+  "adlibc": {
+    "outcome": "accepted",
+    "diagnostic": null,
+    "pbn_sha256": "d7ed048b218250a72c61e1fc821eeead4c0e94cb5ac5722383a0c52796464c44"
+  },
+  "adlibc_agrees": true
+}

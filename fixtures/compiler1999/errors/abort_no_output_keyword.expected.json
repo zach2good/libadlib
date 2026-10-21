@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "abort_no_output_keyword.txt:1: error [compile/throw] (byte 35): Aborting Plan Parse.\n",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "abort_no_output_keyword.txt:1: error [compile/throw] (byte 35): Aborting Plan Parse.\n",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "abort_no_output_keyword.txt:1: error [compile/throw] (byte 35): Aborting Plan Parse.",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

@@ -1,6 +1,8 @@
 // adlib-tools: symbol tables (the compiler's view of a vocabulary).
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -109,6 +111,17 @@ bool SymbolTable::isIdentifier(std::string_view n) {
 
 bool SymbolTable::isPronounName(std::string_view n) { return n.size() >= 6 && n.substr(3, 3) == "PRN"; }
 
+bool SymbolTable::identifier(std::string_view n) const {
+    return isIdentifier(n) || (isLaterCompat(compat) && n.substr(0, 3) == "BC_");
+}
+
+uint16_t SymbolTable::pronounTag(std::string_view n) const {
+    if (!isLaterCompat(compat)) return isPronounName(n) ? kTagPronoun : 0;
+    if (n.substr(0, 7) == "id_PRN_") return kTagPronoun1998;
+    if (n.substr(0, 7) == "id_PRT_") return kTagPronoun;
+    return 0;
+}
+
 std::string SymbolTable::nameIn(const std::string &ns, int v) const {
     std::string nsName = ns;
     if (!ns.empty() && ns[0] == '@') { // role reference
@@ -119,7 +132,8 @@ std::string SymbolTable::nameIn(const std::string &ns, int v) const {
     if (!n) return {};
     const char *nm = n->name(v);
     if (!nm || !*nm) return {};
-    if (!isIdentifier(nm) || isPronounName(nm)) return {};
+    if (!identifier(nm) || pronounTag(nm)) return {};
+    if (isLaterCompat(compat) && std::strlen(nm) >= kNameField1999) return {}; // stored without a terminator
     const Entry *e = lookup(nm);
     return e && e->value == v ? std::string(nm) : std::string();
 }
@@ -144,8 +158,60 @@ bool SymbolTable::addHint(const std::string &spec, std::string *err) {
     return true;
 }
 
-bool loadCompilerSymbolsDir(SymbolTable &t, const std::string &dataDir, std::string *err) {
+void addCompilerSymbols(SymbolTable &t, const CompilerSymbols &cs) {
+    // Lookups see the first kSymbolLimit1999 entries, and stop at an entry whose value is -1 (the terminator
+    // test); names of 36+ characters never match (nameIn).
+    for (size_t i = 0; i < cs.symbols().size() && i < kSymbolLimit1999 && cs.symbols()[i].value != -1; ++i)
+        t.add(cs.symbols()[i].name, cs.symbols()[i].value, cs.symbols()[i].group);
+    // The reserved ids are the low ids of their roles' enums.
+    const std::pair<const char *, Role> reserved[] = {
+        {"reservedACFIDs", Role::Action}, {"reservedAgdIDs", Role::Agenda}, {"reservedMsgIDs", Role::Message}};
+    for (const auto &[ns, role] : reserved) {
+        const Namespace *from = t.vocab().find(ns);
+        if (!from) continue;
+        for (size_t i = 0; i < from->names().size(); ++i) {
+            const std::string &n = from->names()[i];
+            if (!n.empty() && n.find("NUMRES") == std::string::npos) t.vocab().roleNs(role).add(n, int(i));
+        }
+    }
+}
+
+bool loadSceneFile(const std::string &path, CompilerScene &out, std::string *err) {
+    std::string data;
+    if (!readFile(path, data, err)) return false;
+    if (parseScene(data, out, err)) return true;
+    if (err) *err = path + ": " + *err;
+    return false;
+}
+
+bool loadCompilerSymbolsDir(SymbolTable &t, const std::string &dataDir, std::string *err, const CompilerScene *scene,
+                            CompilerSymbols *compiler) {
     namespace fs = std::filesystem;
+    if (isLaterCompat(t.compat)) {
+        std::string e;
+        CompilerSymbols cs;
+        try {
+            cs = CompilerSymbols::fromDataDir(dataDir, t.compat, &e, scene);
+        } catch (const std::exception &x) {
+            e = x.what();
+        }
+        if (!e.empty()) {
+            if (err) *err = e;
+            return false;
+        }
+        addCompilerSymbols(t, cs);
+        if (compiler) *compiler = std::move(cs);
+        if (err) err->clear();
+        return true;
+    }
+    if (compiler) {
+        try {
+            std::string e;
+            *compiler = CompilerSymbols::fromDataDir(dataDir, &e, t.compat == Compat::Adlib1996);
+        } catch (const std::exception &) {
+            // the tools' own reading below reports the problem
+        }
+    }
     // Case-insensitive file lookup (the 1996 layout comes from a DOS file system).
     auto find = [&](std::initializer_list<const char *> parts, std::string &out) {
         fs::path p = dataDir;
@@ -169,11 +235,40 @@ bool loadCompilerSymbolsDir(SymbolTable &t, const std::string &dataDir, std::str
     find({"ANIMDATA", "ANIMASSM.TXT"}, a);
     find({"SNDFILES.LST"}, s);
     find({"INFOBTXT.LST"}, x);
-    return loadCompilerSymbolFiles(t, e, a, s, x, err);
+    return loadCompilerSymbolFiles(t, e, a, s, x, err, {}, nullptr, nullptr);
 }
 
 bool loadCompilerSymbolFiles(SymbolTable &t, const std::string &enumIds, const std::string &animAssm,
-                             const std::string &sndFiles, const std::string &infobTxt, std::string *err) {
+                             const std::string &sndFiles, const std::string &infobTxt, std::string *err,
+                             const std::string &reservedEnumIds, const CompilerScene *scene, CompilerSymbols *compiler) {
+    SymbolFiles files;
+    for (auto [path, dst] : {std::pair{&reservedEnumIds, &files.reservedEnumIds}, std::pair{&enumIds, &files.enumIds},
+                             std::pair{&animAssm, &files.animAssm}, std::pair{&sndFiles, &files.sndFiles},
+                             std::pair{&infobTxt, &files.infobTxt}}) {
+        std::string text;
+        if (path->empty()) continue;
+        if (!readFile(*path, text, err)) return false;
+        *dst = text;
+    }
+    if (isLaterCompat(t.compat)) {
+        try {
+            CompilerSymbols cs = CompilerSymbols::fromFiles(files, t.compat, scene);
+            addCompilerSymbols(t, cs);
+            if (compiler) *compiler = std::move(cs);
+        } catch (const std::exception &e) {
+            if (err) *err = e.what();
+            return false;
+        }
+        if (err) err->clear();
+        return true;
+    }
+    if (compiler) {
+        try {
+            *compiler = CompilerSymbols::fromFiles(files, t.compat == Compat::Adlib1996);
+        } catch (const std::exception &) {
+            // the tools' own reading below reports the problem
+        }
+    }
     std::string path = enumIds, data;
     if (!readFile(path, data, err)) return false;
     // Role bindings / namespace names come from the regular enum parser (same ids, plans_test).
@@ -262,7 +357,8 @@ bool loadListFile(SymbolTable &t, const std::string &ns, const std::string &path
     return true;
 }
 
-bool loadSymbolsDir(SymbolTable &t, const std::string &dir, std::string *err) {
+bool loadSymbolsDir(SymbolTable &t, const std::string &dir, std::string *err, const CompilerScene *scene,
+                    CompilerSymbols *compiler) {
     namespace fs = std::filesystem;
     std::error_code ec;
     if (!fs::is_directory(dir, ec)) {
@@ -279,7 +375,7 @@ bool loadSymbolsDir(SymbolTable &t, const std::string &dir, std::string *err) {
         if (de.is_regular_file() && ext == ".h") headers.push_back(de.path());
         if (de.is_regular_file() && ext == ".lst") lists.push_back(de.path());
     }
-    if (hasEnumIds && hasAnim) return loadCompilerSymbolsDir(t, dir, err);
+    if (isLaterCompat(t.compat) || (hasEnumIds && hasAnim)) return loadCompilerSymbolsDir(t, dir, err, scene, compiler);
     std::sort(headers.begin(), headers.end());
     std::sort(lists.begin(), lists.end());
     if (headers.empty()) {

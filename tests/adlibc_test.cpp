@@ -5,7 +5,10 @@
 //     must give the same outcome, the exact diagnostic, PBN sha256 and every dword;
 //   - unit checks of behaviour discovered with the original compiler;
 //   - the vending machine (new-game path): symbols from files and from a Vocabulary agree, and the
-//     build-time PBNs match.
+//     build-time PBNs match;
+//   - fixtures/compiler1999: the same for the 1999 compiler (Baseball 2000), with the symbol files
+//     and scene in fixtures/vocab1999, under --compat=adlib1999, and the 1998 dialect's one
+//     difference (docs/dialects.md).
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -253,6 +256,76 @@ void testCorpus(const CompilerSymbols &syms, const std::string &base, const char
     for (auto &[k, v] : per) std::printf("%s %-16s %d/%d agree\n", label, k.c_str(), v.first, v.second);
 }
 
+// The 1999 corpus. Scene cases name their scene and object in the expectation.
+void testCorpus1999(const CompilerSymbols &plain, const CompilerSymbols &withScene, const CompilerScene &scene) {
+    std::string base = gFixtures + "/compiler1999";
+    std::map<std::string, std::pair<int, int>> per;
+    for (const char *kind : {"valid", "quirks", "errors", "scene"}) {
+        std::string dir = base + "/" + kind;
+        for (const std::string &f : listDir(dir, ".txt")) {
+            std::string src, exps;
+            readFile(dir + "/" + f, src);
+            if (!readFile(dir + "/" + f.substr(0, f.size() - 4) + ".expected.json", exps)) {
+                CHECK(false, "%s/%s: not frozen (no .expected.json)", kind, f.c_str());
+                continue;
+            }
+            Json exp = parseJson(exps);
+            if (exp["outcome"].t != Json::Str) { CHECK(false, "%s/%s: not frozen", kind, f.c_str()); continue; }
+            CompileOptions o = dirOptions(base + "/plans", &src, f.substr(0, f.size() - 4));
+            o.compat = Compat::Adlib1999;
+            bool sceneCase = exp["scene"].t == Json::Str;
+            if (sceneCase) {
+                o.scene = &scene;
+                o.object = int16_t(exp["object"].n);
+            }
+            CompileResult r = compilePlan(src, sceneCase ? withScene : plain, o);
+            bool ok;
+            if (exp["outcome"].s == "rejected") {
+                const Diagnostic *d = r.error();
+                bool fromAdlibc = exp["expected_from"].s.rfind("adlibc", 0) == 0;
+                std::string got = d ? d->format(f, fromAdlibc) : "(accepted)";
+                ok = !r.ok && got == exp["diagnostic"].s;
+                CHECK(ok, "%s/%s: got '%s' expected '%s'", kind, f.c_str(), got.c_str(), exp["diagnostic"].s.c_str());
+            } else {
+                ok = r.ok && sha256(r.pbn) == exp["pbn_sha256"].s;
+                CHECK(ok, "%s/%s: PBN differs%s", kind, f.c_str(), r.error() ? (": " + r.error()->format(f)).c_str() : "");
+            }
+            per[kind].first += ok;
+            per[kind].second += 1;
+        }
+    }
+    for (auto &[k, v] : per) std::printf("1999 corpus     %-16s %d/%d agree\n", k.c_str(), v.first, v.second);
+    CHECK(per["valid"].second >= 24 && per["quirks"].second >= 17 && per["errors"].second >= 25 && per["scene"].second >= 7,
+          "the 1999 corpus is missing cases");
+}
+
+// 1998 is the 1999 compiler without SET_AGENDA_ITEM_PARAM: the word is dropped like any other.
+void test1998(const CompilerSymbols &s) {
+    CompileOptions o;
+    o.compat = Compat::Adlib1998;
+    CompileResult a = compilePlan("SET_AGENDA_ITEM_PARAM 2 id_AGD_Wait 5\nEND_PLAN\n", s, o);
+    o.compat = Compat::Adlib1999;
+    CompileResult b = compilePlan("SET_AGENDA_ITEM_PARAM 2 id_AGD_Wait 5\nEND_PLAN\n", s, o);
+    CHECK(a.ok && a.words.size() == 5 && a.words[0] == 2 && a.words[1] == 2, "1998 drops SET_AGENDA_ITEM_PARAM");
+    CHECK(b.ok && b.words.size() == 7 && b.words[1] == 0x1A0004, "1999 compiles SET_AGENDA_ITEM_PARAM");
+    o.compat = Compat::Adlib1998;
+    CompileResult c = compilePlan("{Enable {SET_AGENDA_ITEM_PARAM id_AGD_Wait 5}}\nEND_PLAN\n", s, o);
+    CHECK(!c.ok && c.error() && c.error()->message == "Aborting Plan Parse.\n", "1998 braced SET_AGENDA_ITEM_PARAM aborts");
+    // Everything else is the 1999 compiler: one of each.
+    CompileResult d = compilePlan("{DataBlock id_PRN_Me id_PRT_ViewOwner}\nCHANGE_TO_NEW_BEHAVIOR 1 0 END_PLAN\n", s, o);
+    CHECK(d.ok && d.words.size() == 11 && d.words[3] == 0xFEDD0000u && d.words[4] == 0xFEDC0001u && d.words[6] == 0x70005,
+          "1998 pronoun tags and CHANGE_TO_NEW_BEHAVIOR");
+    CHECK(compilerKeywords(Compat::Adlib1998).size() == 21 && compilerKeywords(Compat::Adlib1999).size() == 22,
+          "keyword tables: %zu", compilerKeywords(Compat::Adlib1998).size());
+    // A comment on a last line with no line end: the prescan's read past the end only warns.
+    o.compat = Compat::Adlib1999;
+    CompileResult e = compilePlan("DataBlock 2 1 5\nEND_PLAN\n// no line end", s, o);
+    bool warned = false;
+    for (const Diagnostic &x : e.diagnostics) warned |= x.code == "adlib1999-read-past-end";
+    CHECK(e.ok && warned, "a last-line comment with no line end compiles, with a warning");
+    std::printf("1998 dialect: ok\n");
+}
+
 void testVending() {
     std::string dir = VENDING_DIR;
     SymbolFiles files;
@@ -362,6 +435,7 @@ void testUnits(const CompilerSymbols *base) {
 
 int main(int argc, char **argv) {
     if (argc < 2) { std::fprintf(stderr, "usage: adlibc_test FIXTURES\n"); return 2; }
+    std::setvbuf(stdout, nullptr, _IONBF, 0); // a crash still shows how far the run got
     gFixtures = argv[1];
     std::string err;
     CompilerSymbols ts = CompilerSymbols::fromDataDir(gFixtures + "/vocab", &err, true);
@@ -369,6 +443,40 @@ int main(int argc, char **argv) {
     CHECK(ts.find("id_ACF_Probe") && ts.find("AA_WalkToRun") && ts.find("id_SND_Whistle1") && ts.find("id_TXT_Notice"),
           "fixtures/vocab: the four symbol files");
     testCorpus(ts, gFixtures + "/compiler", "compiler corpus");
+    {
+        CompilerScene scene;
+        std::string sbn;
+        CHECK(readFile(gFixtures + "/vocab1999/scene.sbn", sbn) && parseScene(sbn, scene, &err), "scene.sbn: %s", err.c_str());
+        CHECK(scene.types.size() == 2 && scene.objects.size() == 3 && scene.objectFor("hitter") == 0 &&
+              scene.objectFor("BallPlan") == 1 && scene.objectFor("Nobody") == -1, "scene.sbn contents");
+        CompilerSymbols plain = CompilerSymbols::fromDataDir(gFixtures + "/vocab1999", Compat::Adlib1999, &err);
+        CHECK(err.empty(), "vocab1999: %s", err.c_str());
+        CompilerSymbols withScene = CompilerSymbols::fromDataDir(gFixtures + "/vocab1999", Compat::Adlib1999, &err, &scene);
+        const CompilerSymbol *agd = plain.find("id_AGD_Dummy"), *msg = plain.find("id_MSG_Ping"), *bc = plain.find("BC_BALLS");
+        CHECK(agd && agd->value == 1 && msg && msg->value == 4 && bc && bc->value == 1, "1999 loader: reserved counts");
+        CHECK(withScene.symbols().size() == plain.symbols().size() + 5 && withScene.symbols()[0].name == "id_MOD_Batter",
+              "scene ids come first");
+        testCorpus1999(plain, withScene, scene);
+        test1998(plain);
+        // A scene built from its sources (fixtures/scene1999): types in order of first use, plans
+        // deduplicated, each type's messages the id_MSG_ tokens its plans use that the symbols lack.
+        std::string cfg;
+        CHECK(readFile(gFixtures + "/scene1999/Test.cfg", cfg), "Test.cfg");
+        CompilerScene built;
+        bool ok = buildScene(cfg, plain, [&](const std::string &p) { return findCI(gFixtures + "/scene1999", p + ".txt"); }, built, &err);
+        CHECK(ok, "buildScene: %s", err.c_str());
+        using V = std::vector<std::string>;
+        CHECK(built.types.size() == 2 && built.types[0].name == "Player" && built.types[1].name == "Ball", "built types");
+        CHECK((built.types.size() == 2 && built.types[0].plans == V{"Walker", "Hitter"} &&
+               built.types[0].messages == V{"id_MSG_Swing", "id_MSG_Catch", "id_MSG_Strike"} &&
+               built.types[1].messages == V{"id_MSG_Bounce", "id_MSG_Swing"}), "built messages");
+        CHECK(built.objects.size() == 3 && built.objects[0].id == "id_MOD_Batter" && built.objects[2].type == 0 &&
+              built.objects[1].collisionObjects.size() == 1 && built.objects[1].collisionObjects[0].second == 1, "built objects");
+        CompilerScene missing;
+        CHECK(!buildScene(cfg, plain, [](const std::string &) { return std::optional<std::string>(); }, missing, &err) &&
+              err.find("could not be opened") != std::string::npos, "buildScene without sources");
+        std::printf("scene from sources: ok\n");
+    }
     testUnits(&ts);
     testVending();
     std::printf("%d checks, %d failures\n", checks, failures);

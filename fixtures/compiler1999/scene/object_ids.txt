@@ -1,0 +1,3 @@
+// object 0
+DataBlock 5 id_MOD_Batter id_MOD_Ball id_MOD_Fielder id_COB_Hands id_COB_Seam
+END_PLAN

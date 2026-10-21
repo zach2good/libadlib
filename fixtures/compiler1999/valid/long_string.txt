@@ -1,0 +1,2 @@
+DECLARE_BEHAVIOR 2 id_BEH_Walk "Long_Long_Long_Long_Long_Long_Long_Long_Long_Name"
+END_PLAN

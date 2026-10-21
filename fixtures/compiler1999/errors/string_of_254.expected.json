@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "string_of_254.txt:2: error [compile/crash] (byte 289): a token of 256 or more bytes overflows the original's 256-byte token buffer",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler crashes on this input)",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "crash",
+    "diagnostic": "string_of_254.txt: crash: compile: Invalid instruction (UC_ERR_INSN_INVALID) at 0x0",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "string_of_254.txt:2: error [compile/crash] (byte 289): a token of 256 or more bytes overflows the original's 256-byte token buffer",
+    "pbn_sha256": null
+  }
+}

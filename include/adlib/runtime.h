@@ -296,6 +296,9 @@ public:
     virtual void initDefault(PlanObject &o, Behavior *b) { owner = &o; }                          // vf04
     virtual bool removeOnBehaviorChange() const { return false; } // vf07
     virtual bool allowMultiple() const { return false; }          // vf08
+    // SET_AGENDA_ITEM_PARAM (1999 on): the statement, sent to the first item on the agenda with
+    // its id. Baseball 2000 calls it through vtable+0x14 of its own agenda item classes.
+    virtual void setParam(PlanObject &o, const Node &n) {}
     int16_t id = -1;            // +0x04 id_AGD_* (also the sort key)
     bool owned = false;         // +0x07 owned by a behaviour (Behavior::owned), never freed by agenda
     PlanObject *owner = nullptr; // +0x08
@@ -326,6 +329,7 @@ public:
     void remove(AgendaItem *it);     // CAgendaItem vf06 0x48df20: unlink + free if !owned
     void unlink(AgendaItem *it);     // unlink only
     void removeById(int id);         // Agenda_RemoveItem 0x4a26a0
+    AgendaItem *find(int id) const;  // the first item with the id, or nullptr
     void clear();                    // teardown: free all !owned
     void tick(PlanObject &o, bool remote);
     const std::vector<AgendaItem *> &items() const { return items_; }

@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "local_reals_need_names.txt:2: error [compile/throw] (byte 37): Expected a string name in LocalVar Declaration.\n",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "local_reals_need_names.txt:2: error [compile/throw] (byte 37): Expected a string name in LocalVar Declaration.\n",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "local_reals_need_names.txt:2: error [compile/throw] (byte 37): Expected a string name in LocalVar Declaration.",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

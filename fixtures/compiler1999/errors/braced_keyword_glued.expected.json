@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "braced_keyword_glued.txt:1: error [compile/throw] (byte 34): Aborting Plan Parse.\n",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "braced_keyword_glued.txt:1: error [compile/throw] (byte 34): Aborting Plan Parse.\n",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "braced_keyword_glued.txt:1: error [compile/throw] (byte 34): Aborting Plan Parse.",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

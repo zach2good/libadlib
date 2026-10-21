@@ -1,0 +1,6 @@
+// object 1
+DO_ACTION 4 id_ACF_SendMessage id_MOD_Batter id_MSG_Catch 1
+DataBlock 1 id_MSG_Catch
+DO_ACTION 4 id_ACF_SendMessage id_MOD_Batter 2 id_MSG_Bounce
+DataBlock 1 id_MSG_Bounce
+END_PLAN

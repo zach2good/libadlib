@@ -302,6 +302,34 @@ CompilerSymbols CompilerSymbols::fromFiles(const SymbolFiles &files, bool origin
     return r;
 }
 
+CompilerSymbols CompilerSymbols::fromFiles(const SymbolFiles &files, Compat compat, const CompilerScene *scene) {
+    if (!isLaterCompat(compat)) return fromFiles(files, compat == Compat::Adlib1996);
+    CompilerSymbols r;
+    r.img_->d.memoryNames = false;
+    r.syms_ = loadSymbols1999(files, scene, r.warnings_);
+    for (int i = 0; i < int(Role::Count); ++i) r.roleGroups_[size_t(i)] = defaultEnumForRole(Role(i));
+    return r;
+}
+
+CompilerSymbols CompilerSymbols::fromDataDir(const std::string &dir, Compat compat, std::string *err,
+                                             const CompilerScene *scene) {
+    if (!isLaterCompat(compat)) return fromDataDir(dir, err, compat == Compat::Adlib1996);
+    SymbolFiles f;
+    std::string t;
+    if (readFileCI(dir, "reservedEnumIDs.h", t) || readFileCI(dir, "RENUMIDS.H", t)) f.reservedEnumIds = t; // 8.3 on CD
+    if (readFileCI(dir, "enumIDs.h", t)) f.enumIds = t;
+    if (readFileCI(dir, "AnimData/Animassm.txt", t)) f.animAssm = t;
+    if (readFileCI(dir, "SndFiles.lst", t)) f.sndFiles = t;
+    if (!f.enumIds || !f.reservedEnumIds) {
+        std::string msg = "no reservedEnumIDs.h and enumIDs.h in " + dir;
+        if (!err) throw std::runtime_error(msg);
+        *err = msg;
+        return CompilerSymbols();
+    }
+    if (err) err->clear();
+    return fromFiles(f, compat, scene);
+}
+
 CompilerSymbols CompilerSymbols::fromDataDir(const std::string &dir, std::string *err, bool originalLimits) {
     SymbolFiles f;
     std::string t;

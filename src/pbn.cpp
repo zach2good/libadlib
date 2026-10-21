@@ -15,6 +15,7 @@ const char *nodeIdName(uint32_t id) {
     case SET_TRACE: return "SET_TRACE";
     case DECLARE_BEHAVIOR: return "DECLARE_BEHAVIOR";
     case CHANGE_TO_BEHAVIOR: return "CHANGE_TO_BEHAVIOR";
+    case CHANGE_TO_NEW_BEHAVIOR: return "CHANGE_TO_NEW_BEHAVIOR";
     case SET_BEHAVIOR_PARAM: return "SET_BEHAVIOR_PARAM";
     case CHANGE_OF_PLAN: return "CHANGE_OF_PLAN";
     case DECLARE_LOCAL_REALS: return "DECLARE_LOCAL_REALS";
@@ -27,6 +28,7 @@ const char *nodeIdName(uint32_t id) {
     case ADD_AGENDA_ITEM: return "ADD_AGENDA_ITEM";
     case SET_TIMEOUTMSG: return "SET_TIMEOUTMSG";
     case REMOVE_AGENDA_ITEM: return "REMOVE_AGENDA_ITEM";
+    case SET_AGENDA_ITEM_PARAM: return "SET_AGENDA_ITEM_PARAM";
     case GLOBAL_INTERACTORS: return "GLOBAL_INTERACTORS";
     case DATA_BLOCK: return "DataBlock";
     case BLOCK: return "Block";
@@ -118,7 +120,7 @@ struct TreeReader {
         pos += 1;
         cop = false;
         out.kind = Arg::Kind::Leaf;
-        if ((t >> 16) == kTagPronoun && hooks.pronoun)
+        if (isPronounTag(uint16_t(t >> 16)) && hooks.pronoun)
             out.u = hooks.pronoun(uint16_t(t & 0xFFFF), t);
         else
             out.u = t;
@@ -162,7 +164,7 @@ static void dumpRec(std::string &s, const Node &n, int depth) {
         if (a.isNode()) { dumpRec(s, *a.node, depth + 1); continue; }
         s.append(size_t(depth + 1) * 2, ' ');
         if (a.kind == Arg::Kind::String) s += "\"" + a.str + "\"";
-        else if (a.tag() == kTagPronoun) { std::snprintf(buf, sizeof buf, "PRN:%u", a.u & 0xFFFF); s += buf; }
+        else if (isPronounTag(a.tag())) { std::snprintf(buf, sizeof buf, "PRN:%u", a.u & 0xFFFF); s += buf; }
         else { std::snprintf(buf, sizeof buf, "0x%x", a.u); s += buf; if (!a.str.empty()) s += " /*plan " + a.str + "*/"; }
         s += '\n';
     }

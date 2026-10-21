@@ -1,0 +1,2 @@
+{DECLARE_BEHAVIOR id_BEH_Walk "Idle" {Enable {SET_AGENDA_ITEM_PARAM id_AGD_Wait 5 1.5}}}
+END_PLAN

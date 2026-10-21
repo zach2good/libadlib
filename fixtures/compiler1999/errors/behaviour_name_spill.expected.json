@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "behaviour_name_spill.txt:4: error [compile/corrupt] (byte 177): the original builds \"Could not find behavior named: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\" in a 64-byte stack buffer",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler crashes on this input)",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "crash",
+    "diagnostic": "behaviour_name_spill.txt: crash: compile: Invalid memory read (UC_ERR_READ_UNMAPPED) at 0x5f66e5",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "behaviour_name_spill.txt:4: error [compile/corrupt] (byte 177): the original builds \"Could not find behavior named: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\" in a 64-byte stack buffer",
+    "pbn_sha256": null
+  }
+}

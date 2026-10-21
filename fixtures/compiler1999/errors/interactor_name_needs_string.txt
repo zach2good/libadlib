@@ -1,0 +1,2 @@
+SET_INTERACTOR_PARAM 3 id_SET_InteractorName Bare
+END_PLAN

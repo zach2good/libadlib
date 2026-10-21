@@ -2,7 +2,8 @@
 //
 //   adlib [vocabulary options] <command> [args]
 //
-//   vocabulary: --symbols DIR | --enumids F ... | --enum FILE | --list NS=FILE | --hint ACF:i=NS
+//   vocabulary: [--compat=MODE] --symbols DIR | --enumids F ... | --enum FILE | --list NS=FILE |
+//               --hint ACF:i=NS
 //   commands:   dump, decompile, graph, inspect, compare, trace
 #include <algorithm>
 #include <cstdio>
@@ -27,15 +28,22 @@ namespace {
 const char *kUsage = R"(usage: adlib [vocabulary] <command> [options]
 
 vocabulary (as adlibc; any combination, loaded in order):
-  --symbols DIR       a symbol directory: the 1996 layout (enumIDs.h, AnimData/Animassm.txt,
-                      Sndfiles.lst, Infobtxt.lst), or *.H enum headers + *.LST lists
-  --enumids F [--anims F] [--sounds F] [--texts F]   the four compiler files individually
+  --compat=MODE       whose compiler the names and the decompiled source are for: adlib (default),
+                      adlib1996, adlib1998, adlib1999 (docs/dialects.md)
+  --symbols DIR       a symbol directory in that compiler's layout (1996: enumIDs.h,
+                      AnimData/Animassm.txt, Sndfiles.lst, Infobtxt.lst; 1998 on: reservedEnumIDs.h,
+                      enumIDs.h, AnimData/Animassm.txt, SndFiles.lst), or *.H enum headers + *.LST lists
+  [--reserved F] --enumids F [--anims F] [--sounds F] [--texts F]   the compiler files individually
+  --scene F.SBN       1998 on: the scene (its object and collision ids are symbols, and it names
+                      each plan's messages); give it before --symbols
   --enum FILE         one enum header        --list NS=FILE   one list file into namespace NS
   --hint ACF:i=NS     DO_ACTION argument i of ACF names a symbol of namespace NS (or @Role)
 
 commands:
   dump [--tokens|--tree|--raw] FILE.PBN       raw token dump / symbolic tree (default --tree)
-  decompile [-o DIR|-] [--annotate|--annotate-offsets] [--crlf] [--no-header] [--plans DIR] FILE.PBN...
+  decompile [-o DIR|-] [--annotate|--annotate-offsets] [--braced] [--crlf] [--no-header] [--no-verify]
+            [--plans DIR] FILE.PBN...   (with the compiler's symbol files the output is compiled
+                                         again and must rebuild the plan; --no-verify skips that)
                                               PBN -> ADLIB compiler source (byte-identical recompile)
   graph [--mermaid] [-o OUT] [--plans DIR] [--no-cond] [--no-timers] [--no-globals] FILE.PBN
   graph --all [--full] [--mermaid] [-o OUT] DIR
@@ -77,12 +85,12 @@ std::vector<std::string> pbnFiles(const std::string &dir) {
     return out;
 }
 
-std::map<std::string, std::vector<std::string>> planBehaviours(const std::string &dir) {
+std::map<std::string, std::vector<std::string>> planBehaviours(const std::string &dir, Compat compat) {
     std::map<std::string, std::vector<std::string>> m;
     for (auto &f : pbnFiles(dir)) {
         std::vector<uint32_t> w;
         std::string err;
-        if (readPbnFile(f, w, &err)) m[upperStem(f)] = behaviourNames(w);
+        if (readPbnFile(f, w, &err)) m[upperStem(f)] = behaviourNames(w, compat);
     }
     return m;
 }
@@ -127,8 +135,9 @@ int cmdDump(SymbolTable &syms, std::vector<std::string> a) {
     return 0;
 }
 
-int cmdDecompile(SymbolTable &syms, std::vector<std::string> a) {
+int cmdDecompile(SymbolTable &syms, std::vector<std::string> a, const CompilerScene *scene, const CompilerSymbols *verify) {
     DecompileOptions opt;
+    bool noVerify = false;
     std::string outDir, plansDir;
     std::vector<std::string> files;
     for (size_t i = 0; i < a.size(); ++i) {
@@ -138,9 +147,14 @@ int cmdDecompile(SymbolTable &syms, std::vector<std::string> a) {
         else if (a[i] == "--annotate-offsets") opt.annotate = opt.annotateOffsets = true;
         else if (a[i] == "--crlf") opt.crlf = true;
         else if (a[i] == "--no-header") opt.header = false;
+        else if (a[i] == "--braced") opt.braced = true;
+        else if (a[i] == "--no-verify") noVerify = true;
         else files.push_back(a[i]);
     }
     if (files.empty()) return usage();
+    if (!verify && !noVerify)
+        std::fprintf(stderr, "adlib: note: the output is not checked; that needs the compiler's symbol files "
+                             "(--symbols or --enumids) and no --enum or --list\n");
     if (files.size() == 1 && fs::is_directory(files[0])) files = pbnFiles(files[0]);
     std::map<std::string, std::map<std::string, std::vector<std::string>>> cache;
     int fails = 0;
@@ -148,9 +162,12 @@ int cmdDecompile(SymbolTable &syms, std::vector<std::string> a) {
     for (auto &f : files) {
         std::string dir = plansDir.empty() ? fs::path(f).parent_path().string() : plansDir;
         if (dir.empty()) dir = ".";
-        if (!cache.count(dir)) cache[dir] = planBehaviours(dir);
+        if (!cache.count(dir)) cache[dir] = planBehaviours(dir, syms.compat);
         opt.planBehaviours = &cache[dir];
         opt.planName = upperStem(f);
+        opt.scene = scene;
+        opt.object = scene ? scene->objectFor(opt.planName) : -1;
+        opt.verify = noVerify ? nullptr : verify;
         std::vector<uint32_t> w;
         std::string err, src;
         if (!readPbnFile(f, w, &err) || !decompile(w, syms, opt, src, &err)) {
@@ -186,7 +203,7 @@ int cmdGraph(SymbolTable &syms, std::vector<std::string> a) {
     if (file.empty()) return usage();
     const SymbolTable *sp = syms.empty() ? nullptr : &syms;
     if (all) {
-        auto pb = planBehaviours(file);
+        auto pb = planBehaviours(file, syms.compat);
         std::vector<PlanModel> models;
         for (auto &f : pbnFiles(file)) {
             std::vector<uint32_t> w;
@@ -198,7 +215,7 @@ int cmdGraph(SymbolTable &syms, std::vector<std::string> a) {
         return writeOut(out, mermaid ? graphMermaidAll(models, go) : graphDotAll(models, full, go)) ? 0 : 1;
     }
     std::string dir = plansDir.empty() ? fs::path(file).parent_path().string() : plansDir;
-    auto pb = planBehaviours(dir.empty() ? "." : dir);
+    auto pb = planBehaviours(dir.empty() ? "." : dir, syms.compat);
     std::vector<uint32_t> w;
     PlanTree t;
     std::string err;
@@ -223,7 +240,7 @@ int cmdInspect(SymbolTable &syms, std::vector<std::string> a) {
     for (auto &f : files) {
         std::string dir = plansDir.empty() ? fs::path(f).parent_path().string() : plansDir;
         if (dir.empty()) dir = ".";
-        auto pb = planBehaviours(dir);
+        auto pb = planBehaviours(dir, syms.compat);
         std::vector<uint32_t> w;
         PlanTree t;
         std::string err;
@@ -306,7 +323,17 @@ int cmdTrace(std::vector<std::string> a) {
 int main(int argc, char **argv) {
     std::vector<std::string> args(argv + 1, argv + argc);
     SymbolTable syms;
-    std::string err, cmd, enumIds, anims, sounds, texts;
+    std::string err, cmd, reserved, enumIds, anims, sounds, texts;
+    CompilerScene scene;
+    bool haveScene = false;
+    CompilerSymbols compilerSyms;
+    bool haveCompilerSyms = false;
+    bool ownNames = false; // --enum/--list names the compiler does not know
+    for (const std::string &x : args) // the dialect decides how the symbol files below are read
+        if (x.rfind("--compat=", 0) == 0 && !parseCompat(x.substr(9), syms.compat)) {
+            std::fprintf(stderr, "adlib: unknown mode %s (adlib, adlib1996, adlib1998, adlib1999)\n", x.c_str());
+            return 2;
+        }
     // Vocabulary options may appear before or after the command; everything else is kept.
     std::vector<std::string> keep;
     for (size_t k = 0; k < args.size(); ++k) {
@@ -315,29 +342,53 @@ int main(int argc, char **argv) {
         bool ok = true;
         if (x == "-h" || x == "--help") { std::fputs(kUsage, stdout); return 0; }
         if (x == "--version") { std::printf("adlib %s\n", adlib::kVersion); return 0; }
-        if (x == "--symbols" && hasV) ok = loadSymbolsDir(syms, args[++k], &err);
+        if (x.rfind("--compat=", 0) == 0) continue;
+        if (x == "--scene" && hasV) {
+            if (!syms.empty()) {
+                std::fprintf(stderr, "adlib: give --scene before the symbol options: its ids come first\n");
+                return 2;
+            }
+            ok = loadSceneFile(args[++k], scene, &err);
+            haveScene = ok;
+        } else if (x == "--symbols" && hasV) {
+            ok = loadSymbolsDir(syms, args[++k], &err, haveScene ? &scene : nullptr, &compilerSyms);
+            haveCompilerSyms = ok && !compilerSyms.symbols().empty();
+        } else if (x == "--reserved" && hasV) reserved = args[++k];
         else if (x == "--enumids" && hasV) enumIds = args[++k];
         else if (x == "--anims" && hasV) anims = args[++k];
         else if (x == "--sounds" && hasV) sounds = args[++k];
         else if (x == "--texts" && hasV) texts = args[++k];
-        else if (x == "--enum" && hasV) ok = loadEnumFile(syms, args[++k], &err);
+        else if (x == "--enum" && hasV) {
+            ok = loadEnumFile(syms, args[++k], &err);
+            ownNames = true;
+        }
         else if (x == "--hint" && hasV) ok = syms.addHint(args[++k], &err);
         else if (x == "--list" && hasV) {
             std::string v = args[++k];
             size_t eq = v.find('=');
             ok = eq != std::string::npos && loadListFile(syms, v.substr(0, eq), v.substr(eq + 1), &err);
+            ownNames = true;
         } else if (x == "--plans-dir") keep.push_back("--plans"); // adlibc spelling
         else if (cmd.empty() && !x.empty() && x[0] != '-') cmd = x;
         else keep.push_back(x);
         if (!ok) { std::fprintf(stderr, "adlib: %s\n", err.empty() ? "bad vocabulary option" : err.c_str()); return 2; }
     }
-    if (!enumIds.empty() && !loadCompilerSymbolFiles(syms, enumIds, anims, sounds, texts, &err)) {
-        std::fprintf(stderr, "adlib: %s\n", err.c_str());
-        return 2;
+    if (!enumIds.empty()) {
+        if (!loadCompilerSymbolFiles(syms, enumIds, anims, sounds, texts, &err, reserved, haveScene ? &scene : nullptr,
+                                     &compilerSyms)) {
+            std::fprintf(stderr, "adlib: %s\n", err.c_str());
+            return 2;
+        }
+        haveCompilerSyms = !compilerSyms.symbols().empty();
     }
     if (cmd.empty()) return usage();
+    bool laterOnly = haveScene || !reserved.empty() || std::find(keep.begin(), keep.end(), "--braced") != keep.end();
+    if (laterOnly && !isLaterCompat(syms.compat)) {
+        std::fprintf(stderr, "adlib: --scene, --reserved and --braced need --compat=adlib1998 or adlib1999\n");
+        return 2;
+    }
     if (cmd == "dump") return cmdDump(syms, keep);
-    if (cmd == "decompile") return cmdDecompile(syms, keep);
+    if (cmd == "decompile") return cmdDecompile(syms, keep, haveScene ? &scene : nullptr, haveCompilerSyms && !ownNames ? &compilerSyms : nullptr);
     if (cmd == "graph") return cmdGraph(syms, keep);
     if (cmd == "inspect" || cmd == "lint") {
         if (cmd == "lint") keep.push_back("--lint-only");

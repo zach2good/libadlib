@@ -1,0 +1,16 @@
+{GLOBAL_INTERACTORS
+	{SET_MESSAGE_INTERACTOR id_MSG_Coin {Enable {CHANGE_TO_BEHAVIOR "Idle"}}}
+	{SET_COLLISION_INTERACTOR id_COB_Bat id_COB_Glove {Enable {DO_ACTION id_ACF_PlayTone 2}}}
+}
+{DECLARE_BEHAVIOR id_BEH_Walk "Idle"
+	{SET_MESSAGE_INTERACTOR id_MSG_Ping
+		{Enable
+			{DECIDE_BY_AMONG id_DCF_Choose {Block {DO_ACTION id_ACF_SetPose 1}} {DataBlock 2 3}}
+			{ADD_AGENDA_ITEM id_AGD_Wait 100}
+			{REMOVE_AGENDA_ITEM id_AGD_Wait}
+			{SET_TIMEOUTMSG 50 id_MSG_Done id_PRN_Me}
+			{SET_BEHAVIOR_PARAM id_SET_PurgeFlag 1}
+		}
+	}
+}
+END_PLAN

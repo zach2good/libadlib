@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "plan_not_found_long_message.txt:1: error [compile/throw] (byte 124): This Plan file could not be opened: Data\\Plans\\PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.txt",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "plan_not_found_long_message.txt:1: error [compile/throw] (byte 124): This Plan file could not be opened: Data\\Plans\\PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.txt",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "plan_not_found_long_message.txt:1: error [compile/throw] (byte 124): This Plan file could not be opened: Data\\Plans\\PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.txt",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

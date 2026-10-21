@@ -35,7 +35,7 @@ configure_file(cmake/version.h.in ${PROJECT_BINARY_DIR}/generated/include/adlib/
 add_library(adlib STATIC
   src/vocabulary.cpp src/pbn.cpp src/pbn_writer.cpp src/runtime.cpp
   # adlibc, the compiler (docs/adlibc.md)
-  src/compiler/numbers.cpp src/compiler/symbols.cpp src/compiler/compiler.cpp src/compiler/strict.cpp)
+  src/compiler/numbers.cpp src/compiler/symbols.cpp src/compiler/compiler.cpp src/compiler/later.cpp src/compiler/strict.cpp)
 add_library(adlib::adlib ALIAS adlib)
 target_include_directories(adlib PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -73,6 +73,10 @@ if(ADLIB_BUILD_TOOLS)
   target_link_libraries(adlibc PRIVATE adlib adlib_tools) # --strict runs tools::lintPlan
   target_compile_definitions(adlibc PRIVATE ADLIBC_LINT=1)
   add_executable(adlib_cli tools/adlib-cli.cpp)
+  if(MSVC) # the 1999 compiler model nests a frame per block, up to the original's 1200
+    target_link_options(adlibc PRIVATE /STACK:16777216)
+    target_link_options(adlib_cli PRIVATE /STACK:16777216)
+  endif()
   target_link_libraries(adlib_cli PRIVATE adlib_tools)
   set_target_properties(adlib_cli PROPERTIES OUTPUT_NAME adlib)
   if(EMSCRIPTEN)
@@ -123,6 +127,10 @@ if(ADLIB_BUILD_TESTS)
   add_executable(adlib_tools_test tests/adlib_tools_test.cpp)
   target_link_libraries(adlib_tools_test PRIVATE adlib_tools)
   target_compile_definitions(adlib_tools_test PRIVATE VENDING_DIR="${VENDING_SRC}")
+  if(MSVC) # the tests compile plans nested up to the 1999 compiler's 1200 levels
+    target_link_options(adlibc_test PRIVATE /STACK:16777216)
+    target_link_options(adlib_tools_test PRIVATE /STACK:16777216)
+  endif()
   if(EMSCRIPTEN)
     foreach(t adlib_test adlibc_test adlib_tools_test)
       target_link_options(${t} PRIVATE ${ADLIB_NODE_LINK})
@@ -132,7 +140,7 @@ if(ADLIB_BUILD_TESTS)
   # The test suite needs no external data.
   add_test(NAME adlib_test COMMAND adlib_test)
   add_test(NAME adlibc_test COMMAND adlibc_test ${ADLIB_FIXTURES})
-  add_test(NAME adlib_tools_test COMMAND adlib_tools_test)
+  add_test(NAME adlib_tools_test COMMAND adlib_tools_test ${ADLIB_FIXTURES})
   add_test(NAME vending_machine COMMAND vending_machine)
   add_test(NAME cli_version COMMAND adlibc --version)
   set_tests_properties(cli_version PROPERTIES PASS_REGULAR_EXPRESSION "adlibc ${PROJECT_VERSION}")

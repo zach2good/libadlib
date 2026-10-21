@@ -1,0 +1,19 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "send_to_missing_object.txt:2: error [compile/crash] (byte 57): no object 7 in the scene: the original reads a null object",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler crashes on this input)",
+  "scene": "scene.sbn",
+  "object": 0,
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "crash",
+    "diagnostic": "send_to_missing_object.txt: crash: compile: Invalid memory read (UC_ERR_READ_UNMAPPED) at 0x612940",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "send_to_missing_object.txt:2: error [compile/crash] (byte 57): no object 7 in the scene: the original reads a null object",
+    "pbn_sha256": null
+  }
+}

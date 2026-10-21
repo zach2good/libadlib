@@ -1,0 +1,2 @@
+DECLARE_LOCAL_REALS 2 "Speed" Angle
+END_PLAN

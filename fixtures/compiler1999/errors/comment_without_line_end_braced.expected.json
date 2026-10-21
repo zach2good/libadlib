@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "comment_without_line_end_braced.txt:2: error [compile/undefined] (byte 18): a line at the end of the source has no line end, and the original reads on into stale buffer contents looking for the next block",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler crashes on this input)",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "crash",
+    "diagnostic": "comment_without_line_end_braced.txt: crash: compile: Invalid memory write (UC_ERR_WRITE_UNMAPPED) at 0x60fb9b",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "comment_without_line_end_braced.txt:2: error [compile/undefined] (byte 18): a line at the end of the source has no line end, and the original reads on into stale buffer contents looking for the next block",
+    "pbn_sha256": null
+  }
+}

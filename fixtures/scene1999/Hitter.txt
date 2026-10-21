@@ -1,0 +1,2 @@
+{DECLARE_BEHAVIOR id_BEH_Swing "Hit" {SET_MESSAGE_INTERACTOR ID_MSG_Ignored {Enable {DataBlock id_MSG_swing id_MSG_Strike}}}}
+END_PLAN

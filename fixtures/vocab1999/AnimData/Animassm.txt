@@ -1,0 +1,4 @@
+Version 1
+AA_Stand 0 10
+AA_WalkToRun 10 20
+AA_Swing 20 40

@@ -70,7 +70,7 @@ uint32_t ActionCtx::arg(size_t i) const {
 
 int32_t ActionCtx::argResolved(size_t i) const {
     uint32_t v = arg(i);
-    if ((v >> 16) == kTagPronoun) return obj.registry().resolveRuntimePronoun(int(v & 0xFFFF), obj);
+    if (isPronounTag(uint16_t(v >> 16))) return obj.registry().resolveRuntimePronoun(int(v & 0xFFFF), obj);
     return int32_t(v);
 }
 
@@ -324,11 +324,11 @@ void registerFrameworkDefaults(Registry &r) {
 // Interactors
 
 int16_t Interactor::cobMine() const {
-    if ((a28 >> 16) == kTagPronoun) return int16_t(obj->registry().resolveRuntimePronoun(int(a28 & 0xFFFF), *obj));
+    if (isPronounTag(uint16_t(a28 >> 16))) return int16_t(obj->registry().resolveRuntimePronoun(int(a28 & 0xFFFF), *obj));
     return int16_t(a28);
 }
 int16_t Interactor::cobOther() const {
-    if ((a2c >> 16) == kTagPronoun) return int16_t(obj->registry().resolveRuntimePronoun(int(a2c & 0xFFFF), *obj));
+    if (isPronounTag(uint16_t(a2c >> 16))) return int16_t(obj->registry().resolveRuntimePronoun(int(a2c & 0xFFFF), *obj));
     return int16_t(a2c);
 }
 
@@ -417,6 +417,12 @@ void Agenda::removeById(int id) {
         if (it->id == id) remove(it);
 }
 
+AgendaItem *Agenda::find(int id) const {
+    for (AgendaItem *it : items_)
+        if (it->id == id && !it->dead) return it;
+    return nullptr;
+}
+
 void Agenda::clear() {
     std::vector<AgendaItem *> copy;
     copy.swap(items_);
@@ -470,7 +476,7 @@ void TimerActivity::update(PlanObject &o) {
         o.scene().broadcast(msg, data, o.index());
     } else {
         int32_t r = int32_t(recipient);
-        if ((recipient >> 16) == kTagPronoun) r = o.registry().resolveRuntimePronoun(int(recipient & 0xFFFF), o); // port
+        if (isPronounTag(uint16_t(recipient >> 16))) r = o.registry().resolveRuntimePronoun(int(recipient & 0xFFFF), o); // port
         if (PlanObject *dst = o.scene().object(int16_t(r))) dst->sendMessage(msg, data, o.registry().ids().timerSender, 0);
     }
     o.agenda().remove(this);
@@ -946,6 +952,13 @@ void PlanObject::execute(Interactor &it, const std::vector<Arg> &list, size_t fi
                     reg_.emit(*this, TraceEvent::Kind::ChangeRequest, -1, it.nextBeh, 0, &n);
                 } else if (n.variant() == 3) {
                     reg_.callBehaviorParam(int16_t(n.leaf(0)), *this, n, cur);
+                } else if (n.variant() == 5) {
+                    // CHANGE_TO_NEW_BEHAVIOR (1998 on): a change to the behaviour already running is
+                    // no change, so it is not left and entered again.
+                    it.nextBeh = n.leaf(0);
+                    if (cur && int32_t(cur->index) == int32_t(n.leaf(0))) it.nextBeh = kNoBehChange;
+                    trace(fmt("CHANGE_TO_NEW_BEHAVIOR 0x%x", it.nextBeh));
+                    reg_.emit(*this, TraceEvent::Kind::ChangeRequest, -1, it.nextBeh, 0, &n);
                 }
             } else {
                 throw PlanError("Invalid Instruction object in Interactor");
@@ -998,6 +1011,9 @@ void PlanObject::execute(Interactor &it, const std::vector<Arg> &list, size_t fi
                 trace(fmt("REMOVE_AGENDA_ITEM %s", reg_.symbol(Role::Agenda, int32_t(n.leaf(0)))));
                 reg_.emit(*this, TraceEvent::Kind::AgendaRemove, int32_t(n.leaf(0)), 0, 0, &n);
                 agenda_.removeById(int32_t(n.leaf(0)));
+            } else if (n.id == SET_AGENDA_ITEM_PARAM) {
+                trace(fmt("SET_AGENDA_ITEM_PARAM %s", reg_.symbol(Role::Agenda, int32_t(n.leaf(0)))));
+                if (AgendaItem *item = agenda_.find(int32_t(n.leaf(0)))) item->setParam(*this, n);
             }
         } else if (c == BLOCK) {
             execute(it, n.args, 0, n.args.size(), msgData, path);

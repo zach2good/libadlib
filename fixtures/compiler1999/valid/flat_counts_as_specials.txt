@@ -1,0 +1,3 @@
+DECLARE_BEHAVIOR _3_ id_BEH_Walk "Idle"
+	DO_ACTION _2_ id_ACF_PlayTone _7_
+END_PLAN

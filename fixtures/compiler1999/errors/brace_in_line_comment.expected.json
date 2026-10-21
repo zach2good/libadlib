@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "brace_in_line_comment.txt:1: error [compile/throw] (byte 32): Aborting Plan Parse.\n",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "brace_in_line_comment.txt:1: error [compile/throw] (byte 32): Aborting Plan Parse.\n",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "brace_in_line_comment.txt:1: error [compile/throw] (byte 32): Aborting Plan Parse.",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "hex_without_digits.txt:2: error [compile/undefined] (byte 16): '0x': sscanf(\"%x\") finds no digits and the original emits a stack address",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler emits uninitialised memory on this input)",
+  "oracle": {
+    "outcome": "accepted",
+    "kind": null,
+    "diagnostic": null,
+    "pbn_sha256": "33fed09b3a254fd07ec4c64f68786547fe0ba09b7441efd66346d725f0f614ee"
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "hex_without_digits.txt:2: error [compile/undefined] (byte 16): '0x': sscanf(\"%x\") finds no digits and the original emits a stack address",
+    "pbn_sha256": null
+  }
+}

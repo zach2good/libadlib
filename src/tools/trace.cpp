@@ -117,7 +117,7 @@ std::string Tracer::describe(PlanObject &o, const TraceEvent &ev, std::string &k
     using K = TraceEvent::Kind;
     std::ostringstream s;
     auto value = [&](uint32_t v, const std::string &hintNs) -> std::string {
-        if ((v >> 16) == kTagPronoun) return sym(Role::Pronoun, int(v & 0xFFFF));
+        if (isPronounTag(uint16_t(v >> 16))) return sym(Role::Pronoun, int(v & 0xFFFF));
         switch (v) {
         case kMessageData: return "_MESSAGE_DATA_";
         case kBroadcast: return "_BROADCAST_";

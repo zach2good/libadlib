@@ -1,0 +1,3 @@
+{DECLARE_BEHAVIOR id_BEH_Walk "Idle" {Enable {DO_ACTION id_ACF_PlayTone 1}}}
+DECLARE_BEHAVIOR 2 id_BEH_Swing "Hit"
+END_PLAN

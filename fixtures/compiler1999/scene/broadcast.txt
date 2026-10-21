@@ -1,0 +1,4 @@
+// object 1
+DO_ACTION 4 id_ACF_SendMessage _BROADCAST_ id_MSG_Swing 3
+{DO_ACTION id_ACF_SendMessage _MESSAGE_DATA_ id_MSG_Catch}
+END_PLAN

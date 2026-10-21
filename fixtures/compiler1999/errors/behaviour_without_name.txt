@@ -1,0 +1,1 @@
+{DECLARE_BEHAVIOR id_BEH_Walk Idle}

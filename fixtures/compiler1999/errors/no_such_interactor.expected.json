@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "no_such_interactor.txt:2: error [compile/throw] (byte 52): Could not find interactor named: Nobody",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "no_such_interactor.txt:2: error [compile/throw] (byte 52): Could not find interactor named: Nobody",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "no_such_interactor.txt:2: error [compile/throw] (byte 52): Could not find interactor named: Nobody",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

@@ -1,0 +1,3 @@
+{DataBlock 1}
+{FOO 3}
+END_PLAN

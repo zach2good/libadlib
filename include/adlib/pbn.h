@@ -17,7 +17,11 @@ namespace adlib {
 // ---- token tags ---------------------------------------------------------------------------
 constexpr uint32_t kTokNode = 0xABCDEFFF;
 constexpr uint32_t kTokString = 0xABCDEFFE;
-constexpr uint16_t kTagPronoun = 0xFEDC;   // 0xFEDCxxxx: id_PRN_xxxx
+// 0xFEDCxxxx: id_PRN_xxxx in the 1996 language. From 1998 it tags id_PRT_xxxx (pronouns resolved
+// at run time), and id_PRN_xxxx takes 0xFEDDxxxx.
+constexpr uint16_t kTagPronoun = 0xFEDC;
+constexpr uint16_t kTagPronoun1998 = 0xFEDD; // 0xFEDDxxxx: id_PRN_xxxx (1998 on)
+constexpr bool isPronounTag(uint16_t tag) { return tag == kTagPronoun || tag == kTagPronoun1998; }
 constexpr uint16_t kTagLocalReal = 0xEDCB; // 0xEDCBxxxx: local real #xxxx
 constexpr uint16_t kTagNameRef = 0xDCBA;   // 0xDCBAxxxx: interactor name slot #xxxx
 
@@ -41,6 +45,7 @@ enum NodeId : uint32_t {
     DECLARE_BEHAVIOR = 0x00070000,
     CHANGE_TO_BEHAVIOR = 0x00070002,
     SET_BEHAVIOR_PARAM = 0x00070003,
+    CHANGE_TO_NEW_BEHAVIOR = 0x00070005, // 1998 on
     CHANGE_OF_PLAN = 0x00160000,
     DECLARE_LOCAL_REALS = 0x00160001,
     DECIDE_BY_AMONG = 0x00170000,
@@ -52,6 +57,7 @@ enum NodeId : uint32_t {
     ADD_AGENDA_ITEM = 0x001A0001,
     SET_TIMEOUTMSG = 0x001A0002,
     REMOVE_AGENDA_ITEM = 0x001A0003,
+    SET_AGENDA_ITEM_PARAM = 0x001A0004, // 1999 on
     GLOBAL_INTERACTORS = 0x001B0000,
     DATA_BLOCK = 0x20000000,
     BLOCK = 0x40000000,

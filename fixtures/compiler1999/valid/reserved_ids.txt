@@ -1,0 +1,2 @@
+DataBlock 8 id_AGD_CTimerActivity id_AGD_Dummy id_AGD_Wait id_ACF_SendMessage id_ACF_Dummy id_ACF_PlayTone id_MSG_SyncFrame id_MSG_Ping
+END_PLAN

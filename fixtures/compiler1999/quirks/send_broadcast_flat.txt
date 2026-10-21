@@ -1,0 +1,2 @@
+DO_ACTION 4 id_ACF_SendMessage _BROADCAST_ id_MSG_Ping 3
+END_PLAN

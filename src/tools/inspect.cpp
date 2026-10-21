@@ -258,7 +258,7 @@ std::vector<Issue> checkIds(const PlanTree &tree, const SymbolTable &syms) {
     std::vector<Issue> out;
     const Vocabulary &v = syms.vocab();
     auto check = [&](Role r, uint32_t raw, const std::string &p, const char *what) {
-        if ((raw >> 16) == kTagPronoun) {
+        if (isPronounTag(uint16_t(raw >> 16))) {
             if (!v.name(Role::Pronoun, int(raw & 0xFFFF)))
                 out.push_back({Sev::Error, p, "unknown pronoun " + std::to_string(raw & 0xFFFF)});
             return;
@@ -298,7 +298,7 @@ std::vector<Issue> checkIds(const PlanTree &tree, const SymbolTable &syms) {
         }
         for (size_t i = 0; i < n.args.size(); ++i) {
             if (n.args[i].node) walk(*n.args[i].node, q + "[" + std::to_string(i) + "]");
-            else if ((n.args[i].u >> 16) == kTagPronoun && !v.name(Role::Pronoun, int(n.args[i].u & 0xFFFF)))
+            else if (isPronounTag(uint16_t(n.args[i].u >> 16)) && !v.name(Role::Pronoun, int(n.args[i].u & 0xFFFF)))
                 out.push_back({Sev::Error, q, "unknown pronoun " + std::to_string(n.args[i].u & 0xFFFF)});
         }
     };
@@ -365,7 +365,7 @@ void countNodes(const Node &n, std::map<std::string, int> &kwc, std::map<std::st
     }
     for (auto &a : n.args) {
         if (a.node) countNodes(*a.node, kwc, use, syms);
-        else if ((a.u >> 16) == kTagPronoun) use["pronouns"][syms ? syms->displayName(Role::Pronoun, int(a.u & 0xFFFF)) : std::to_string(a.u & 0xFFFF)]++;
+        else if (isPronounTag(uint16_t(a.u >> 16))) use["pronouns"][syms ? syms->displayName(Role::Pronoun, int(a.u & 0xFFFF)) : std::to_string(a.u & 0xFFFF)]++;
     }
 }
 } // namespace
@@ -480,7 +480,7 @@ struct Differ {
     std::string named(const Node *parent, size_t i, const Arg &a) const {
         std::string v = val(a);
         if (!syms || a.node || a.kind == Arg::Kind::String || !parent) return v;
-        if ((a.u >> 16) == kTagPronoun) return v + " " + syms->displayName(Role::Pronoun, int(a.u & 0xFFFF));
+        if (isPronounTag(uint16_t(a.u >> 16))) return v + " " + syms->displayName(Role::Pronoun, int(a.u & 0xFFFF));
         int x = a.i();
         const Node &n = *parent;
         std::string nm;

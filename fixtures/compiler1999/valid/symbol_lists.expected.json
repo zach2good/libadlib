@@ -1,0 +1,30 @@
+{
+  "outcome": "accepted",
+  "diagnostic": null,
+  "pbn_sha256": "aa241f6a54df5a2f26afd8f0b56bbf856f751f49e1f107c7406e31eaa0126809",
+  "expected_from": "oracle",
+  "pbn_words": [
+    "00000009",
+    "abcdefff",
+    "20000000",
+    "00000004",
+    "00000000",
+    "00000002",
+    "00000000",
+    "00000002",
+    "abcdefff",
+    "ffff0000"
+  ],
+  "oracle": {
+    "outcome": "accepted",
+    "kind": null,
+    "diagnostic": null,
+    "pbn_sha256": "aa241f6a54df5a2f26afd8f0b56bbf856f751f49e1f107c7406e31eaa0126809"
+  },
+  "adlibc": {
+    "outcome": "accepted",
+    "diagnostic": null,
+    "pbn_sha256": "aa241f6a54df5a2f26afd8f0b56bbf856f751f49e1f107c7406e31eaa0126809"
+  },
+  "adlibc_agrees": true
+}

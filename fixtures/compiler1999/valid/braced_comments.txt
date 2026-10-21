@@ -1,0 +1,7 @@
+// a line comment
+{DataBlock 1}
+(a parenthesised
+comment)
+{DataBlock 2}
+/* a block comment */ {DataBlock 3}
+END_PLAN

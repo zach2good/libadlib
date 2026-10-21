@@ -1,4 +1,4 @@
-# Compatibility: how adlibc is held to the 1996 compiler
+# Compatibility: how adlibc is held to the original compilers
 
 adlibc's claim ([adlibc.md](adlibc.md)) is that, in `--compat=adlib1996` mode, it produces the
 same bytes as the 1996 ADLIB compiler for every input that compiler accepts, and the same
@@ -77,11 +77,65 @@ shipped `.PBN` byte for byte through adlibc and through the original compiler; `
 output for all 32 recompiles byte-identically through both. Those sources and the game's files are
 not part of this package.
 
+## 4. The 1998 and 1999 modes
+
+`--compat=adlib1999` is held to the 1999 compiler inside Baseball 2000's executable
+(`Baseball2000.exe`, sha256 in `fixtures/compiler1999/MANIFEST.json`) in the same three ways.
+`--compat=adlib1998` differs from it by one keyword ([dialects.md](dialects.md)).
+
+**Fixtures.** `fixtures/compiler1999/` holds 87 cases, each frozen from the 1999 compiler with
+`fixtures/vocab1999/` (a made-up vocabulary in the 1998 layout and a made-up scene):
+
+| directory | cases | content |
+|---|---|---|
+| `valid/` | 29 | accepted, one rule each |
+| `quirks/` | 18 | accepted although the text suggests otherwise |
+| `errors/` | 32 | rejected, or refused by adlibc because the original crashes, hangs or reads unwritten memory |
+| `scene/` | 8 | compiled for an object of `scene.sbn`: messages, send targets, broadcasts, object ids |
+| `plans/` | 1 | the sibling plan `CHANGE_OF_PLAN` cases read |
+
+`adlibc_test` compiles every case with `--compat=adlib1999`; `adlib_tools_test` decompiles every
+accepted case that builds a plan tree under both later dialects, flat and braced, and recompiles
+it. `fixtures/scene1999/` checks `buildScene` against a small `.cfg` and its plan sources.
+
+**Review.** A five-part review compared the compiler with the binary function by function and
+attacked the decompiler and the scene readers. Each discrepancy it confirmed against the original
+is now a fixture above (the `errors/plan_name_*`, `count_past_32767`, `many_comments_*`,
+`comment_without_line_end_braced`, `nesting_*` cases among them).
+
+**Differential fuzzing.** A fuzzer built flat, braced and mixed plans from the fixture vocabulary
+and scene (sends, broadcasts, declarations, every keyword in any case, comments, odd counts) and
+mutated a third of them byte by byte. Each was compiled by the 1999 compiler and by
+`adlibc --compat=adlib1999`:
+
+| campaign | cases | compared | agree | original crashed or hung (adlibc refuses) | uninitialised (adlibc refuses) | mismatches |
+|---|---|---|---|---|---|---|
+| final (seeds 41-46, final build) | **15,000** | **13,473** | **13,473** | 1,035 (1,035) | 492 | **0** |
+| after the review fixes (seeds 47-48) | 5,000 | 4,500 | 4,500 | 359 (359) | 141 | **0** |
+
+The earlier campaigns found one disagreement, an error position after the cursor had run past
+the end of the source; that is now refused as `undefined` ([language-1999.md](language-1999.md) §3.2, item 7).
+
+**Real plans.**
+
+| corpus | adlibc round trip | the 1999 compiler |
+|---|---|---|
+| Baseball 3D trial (32 PBNs) | 32/32 (`adlib1998`) | 32/32 from the decompiled source |
+| Baseball 3D 1998, 30 stadiums (960 PBNs) | 960/960 (`adlib1998`) | 960/960 from the decompiled source |
+| the 1998 disc's 34 plan sources, compiled for each stadium | 960/960 shipped PBNs rebuilt (`adlib1998`), with the scene read from the `.SBN` or built from the `.CFG` | 960/960 (the two sources no stadium uses, `BALLINIT` and `MINALT`, have no PBN to compare) |
+| Baseball 2000 (30 PBNs) | 30/30 (`adlib1999`) | 30/30 from the decompiled source |
+| Baseball 2001 (30 PBNs) | 30/30 (`adlib1999`) | 30/30 from the decompiled source |
+
+The 1998 symbol lists were rebuilt from the games' binary `SNDFILES.BLS` and `ANIMASSM.ABN`
+([dialects.md](dialects.md) §3). Baseball 2000 and 2001 ship no headers, so their plans were
+decompiled with the reserved ids, sounds, animations and scene names only. None of these files
+is part of this package.
+
 ## Release criterion
 
 A release requires:
 
-1. the test suite passes on Linux with GCC and Clang (CI);
+1. the test suite passes on Linux with GCC and Clang, and on Windows with MSVC (CI);
 2. every fixture expectation still matches the original compiler when re-derived from it, and
    the real-plan checks above pass;
 3. a fresh fuzz campaign of at least 15,000 compared cases on the release binary with **zero**

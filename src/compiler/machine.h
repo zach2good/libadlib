@@ -60,6 +60,17 @@ struct Hazard {
     std::string message;
 };
 
+// A number token starts with a digit, '.', '+' or '-' (1996 0x488FC0, 1999 0x610FA0).
+inline bool isNumber(const std::string &b) {
+    char c = b.empty() ? '\0' : b[0];
+    return (c >= '0' && c <= '9') || c == '.' || c == '+' || c == '-';
+}
+inline std::string lowerAscii(std::string s) {
+    for (char &c : s)
+        if (c >= 'A' && c <= 'Z') c = char(c + 32);
+    return s;
+}
+
 // MSVC 4.x CRT emulation (numbers.cpp).
 bool msvcParsePlanNumber(const std::string &tok, uint32_t &out, bool *undefined = nullptr);
 int32_t msvcAtol(const char *s);

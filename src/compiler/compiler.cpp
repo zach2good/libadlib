@@ -54,15 +54,6 @@ bool isIdentifier(const std::string &b) { // FUN_00488f30 (reads the NUL after a
     return (c(0) == 'i' && c(1) == 'd') || c(0) == '_' ||
            (c(0) == 'A' && (c(1) == '_' || (c(1) == 'A' && c(2) == '_')));
 }
-bool isNumber(const std::string &b) { // FUN_00488fc0
-    char c = b.empty() ? '\0' : b[0];
-    return (c >= '0' && c <= '9') || c == '.' || c == '+' || c == '-';
-}
-std::string lowerAscii(const std::string &s) {
-    std::string r = s;
-    for (char &c : r) if (c >= 'A' && c <= 'Z') c = char(c + 32);
-    return r;
-}
 
 // Strip the first and last character of the token buffer in place (FUN_0048a900).
 std::string stripInPlace(TokBuf &tb, std::string &buf) {
@@ -583,6 +574,7 @@ CompileResult Compiler::run() {
 } // namespace
 
 CompileResult compilePlan(std::string_view source, const CompilerSymbols &symbols, const CompileOptions &opt) {
+    if (isLaterCompat(opt.compat)) return compileLater(source, symbols, opt);
     Compiler c(symbols, opt, source);
     return c.run();
 }

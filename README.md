@@ -16,13 +16,15 @@ actions, decisions and behaviour types) and implements the primitives in C++. Pl
 they are compiled to compact `.PBN` p-code and interpreted by the runtime.
 
 This package is a reconstruction of the ADLIB system that Stuart Rosen and Robert Duisberg's
-studio **Wizbang!** built and used for Activision's **HyperBlade** (1996), recovered from the
-shipped game and documented so that it can be used again.
+studio **Wizbang!** built and used for Activision's **HyperBlade** (1996) and later for
+Microsoft's **Baseball 3D**, **Baseball 2000** and **Baseball 2001**, recovered from the shipped
+games and documented so that it can be used again. Each game's dialect is supported
+([docs/dialects.md](docs/dialects.md)).
 
 | component | what it is |
 |---|---|
 | **libadlib** | the runtime VM (behaviours, interactors, agenda, message queue, decision paths for lockstep networking), PBN reader/writer, vocabulary loader, host API; C++17, no dependencies |
-| **adlibc** | the compiler, ADLIB source → `.PBN`; byte-identical to the 1996 compiler in `--compat=adlib1996` mode |
+| **adlibc** | the compiler, from ADLIB source to `.PBN`; byte-identical to the 1996 compiler in `--compat=adlib1996` mode and to the 1999 one in `--compat=adlib1999` mode |
 | **adlib** (adlib-tools) | `dump`, `decompile`, `graph` (DOT/Mermaid), `inspect`/`lint`, `compare`, `trace` |
 
 ```text
@@ -31,6 +33,13 @@ Compiler compatibility (vs. the original 1996 compiler, --compat=adlib1996)
 32 / 32 shipped plans          byte-identical
 17,547 / 17,547 fuzz cases     identical
 185 compatibility fixtures     passing
+
+Later dialects (the Baseball games, --compat=adlib1998/adlib1999)
+───────────────────────────────────────────────────────────────────────────
+1,052 / 1,052 shipped Baseball plans   decompile and recompile byte-identically
+960 / 960 shipped 1998 plans           rebuilt from the disc's own sources
+13,473 / 13,473 fuzz cases             identical (15,000 generated)
+87 compatibility fixtures              passing
 ```
 
 ## Status and guarantees (v0.1.0)
@@ -52,10 +61,14 @@ Compiler compatibility (vs. the original 1996 compiler, --compat=adlib1996)
   lifted) and `--compat=adlib1996` (the 1996 compiler exactly, fixed limits included; refuses input
   the original would crash or hang on). `--strict` warns about historical hazards without changing
   the output.
+- Unreleased: two more for the Baseball games, `--compat=adlib1999` (the 1999 compiler exactly)
+  and `--compat=adlib1998` (the same without one keyword). Plans compile against the game's scene
+  (`--scene`). Evidence: [docs/compatibility.md](docs/compatibility.md) §4.
 - The runtime is an independent reconstruction of the 1996 interpreter semantics, made
-  host-agnostic.
-- The language specification ([docs/language.md](docs/language.md)) contains only rules confirmed
-  against the original compiler.
+  host-agnostic, with the two node types the Baseball games added.
+- The language specifications ([docs/language.md](docs/language.md) for 1996,
+  [docs/language-1999.md](docs/language-1999.md) for 1998 and 1999) contain only rules confirmed
+  against the original compilers.
 
 ## Quickstart
 
@@ -135,6 +148,8 @@ target_link_libraries(mygame PRIVATE adlib::adlib)   # + adlib::tools for the tr
 - [Embedding the runtime](docs/host-api.md): vocabulary headers, registering primitives by name,
   `PlanHost`, ticking, messages, decision paths for lockstep networking.
 - [Language specification](docs/language.md): every rule confirmed against the original compiler.
+- [Dialects](docs/dialects.md): which game speaks which version of the language, and why.
+- [The 1998 and 1999 language](docs/language-1999.md): the Baseball games' changes, each confirmed.
 - [adlibc](docs/adlibc.md): modes, `--strict`, diagnostics, quirks policy.
 - [adlib-tools](docs/tools.md): decompile, graph, inspect/lint, compare, trace.
 - [Compatibility](docs/compatibility.md): fixture corpus, fuzzing methodology, release criterion.

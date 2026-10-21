@@ -26,8 +26,10 @@ adlibc's:
 
 | option | loads |
 |---|---|
-| `--enumids F [--anims F] [--sounds F] [--texts F]` | the four 1996 symbol files given one by one |
-| `--symbols DIR` | the 1996 layout (`enumIDs.h`, `AnimData/Animassm.txt`, `Sndfiles.lst` as `id_SND_*`, `Infobtxt.lst` as `id_TXT_*`, read with the 1996 compiler's own tokenizer and order), or else every `*.H` enum header followed by every `*.LST` list. A list's namespace is its upper-case file stem. Use this for the vending machine. |
+| `--compat=MODE` | whose compiler the names and the decompiled source are for: `adlib` (default), `adlib1996`, `adlib1998`, `adlib1999` ([dialects.md](dialects.md)). It decides how `--symbols` reads a directory, which names are identifiers, how pronouns are tagged and which keywords exist |
+| `--scene F.SBN` | 1998 on: the game's compiled scene. Its object and collision-object ids are symbols, and its message lists name each plan's messages. Give it before `--symbols` |
+| `[--reserved F] --enumids F [--anims F] [--sounds F] [--texts F]` | the compiler's symbol files given one by one (`--reserved` is `reservedEnumIDs.h`, 1998 on) |
+| `--symbols DIR` | with `--compat=adlib1998` or `adlib1999`, the 1998 layout (`reservedEnumIDs.h` or the CD's `RENUMIDS.H`, `enumIDs.h`, `AnimData/Animassm.txt`, `SndFiles.lst`, read with the 1999 loader); otherwise the 1996 layout (`enumIDs.h`, `AnimData/Animassm.txt`, `Sndfiles.lst` as `id_SND_*`, `Infobtxt.lst` as `id_TXT_*`, read with the 1996 compiler's own tokenizer and order), or else every `*.H` enum header followed by every `*.LST` list. A list's namespace is its upper-case file stem. Use this for the vending machine. |
 | `--enum FILE`, `--list NS=FILE` | single files |
 | `--hint ACF:i=NS` | argument `i` of action `ACF` names a symbol in namespace `NS` (`@Message` = the Message role). Built in: `SendMessage:2` → messages. A game adds its own, e.g. `--hint PlaySound:1=Sounds` |
 
@@ -89,13 +91,57 @@ DECLARE_BEHAVIOR 6 id_BEH_Machine "HasCredit"  // #1
                     CHANGE_TO_BEHAVIOR 1 "Vending"  // =1
 ```
 
+### From 1998 on
+
+With `--compat=adlib1998` or `adlib1999` the source is written for the 1999 compiler's flat form,
+which brings a few more rules:
+
+- Behaviour names are compared case-insensitively, so a name is used only when no earlier
+  behaviour has it in any case. `CHANGE_TO_NEW_BEHAVIOR` is written like `CHANGE_TO_BEHAVIOR`.
+- Pronouns are named by tag: 0xFEDD for `id_PRN_` names, 0xFEDC for `id_PRT_` names.
+- A keyword the dialect lacks (for example `SET_AGENDA_ITEM_PARAM` in 1998) is an error.
+- Messages are named from the scene (`--scene`): the main table first, then the list of the
+  object whose plan it is. The 1999 prescan reads on to the next `id_MSG_` token after
+  `SET_MESSAGE_INTERACTOR`, so those messages must have a name; without one the plan is not
+  expressible.
+- The token after `id_ACF_SendMessage` is the send's target. As an identifier, `_BROADCAST_`,
+  `_MESSAGE_DATA_` or a pronoun would make the compiler turn the next identifier into a message
+  DataBlock (and every later one, after a numeric message), so such a target is written as a
+  number. A scene object is written by its
+  id only when its message (the next value) has a name in that object's list; the compiler then
+  looks the message up there.
+- `--braced` writes each top-level statement as a braced block when the 1999 compiler rebuilds
+  it from one (the stored count must be the one it computes, every head must have a symbol, and a
+  broadcast's DataBlock must come from a message name in the scene), then the rest flat. Not with
+  `--annotate`.
+- Local-real and interactor names survive in the PBN only as slot numbers. Where the prescan needs
+  a quoted name (`DECLARE_LOCAL_REALS`, `SET_INTERACTOR_PARAM ... id_SET_InteractorName`) one is
+  invented (`"LocalReal0"`, `"Interactor0"`); elsewhere they are hex. This applies in 1996 too.
+
+### Checked output
+
+When the compiler's own symbol files are loaded (`--symbols` in a compiler layout, or
+`--enumids`), `decompile` compiles what it wrote again and compares the dwords
+(`DecompileOptions::verify`). Braced output that does not rebuild the plan is retried flat; a plan
+whose flat source does not rebuild it either is reported as not expressible, and nothing is
+written for it. The comparison covers every dword, those after `END_PLAN` included, and the header
+comment is added after it. `--no-verify` turns the check off; so do names from `--enum` or
+`--list`, which the compiler does not know. An unchecked run says so on stderr.
+
+A PBN keeps less than its source said, so a few plans cannot be written back: a
+`SET_MESSAGE_INTERACTOR` whose original prescan skipped over declarations, words the compiler
+dropped that still moved its position counters, names that collided with local-real or
+interactor names. No shipped plan is one of them.
+
 ### Round-trip verification
 
 Decompiled source recompiles to the same bytes. This was verified on the 32 plans shipped with
 HyperBlade (1996): decompile, then compile with adlibc and with the original 1996 compiler, then
 compare with the shipped files; 32/32 byte-identical from both plain and `--annotate` output
-([compatibility.md](compatibility.md)). `adlib_tools_test` checks the round trip on the vending
-machine.
+([compatibility.md](compatibility.md)). The same holds for every plan of the four Baseball
+games in their dialects, 1052 PBNs ([dialects.md](dialects.md)). `adlib_tools_test` checks the
+round trip on the vending machine and on every plan the 1999 corpus accepts that builds a plan
+tree, under both later dialects, flat and braced.
 
 ## graph
 

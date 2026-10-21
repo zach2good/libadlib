@@ -1,0 +1,7 @@
+// object 0
+DECLARE_BEHAVIOR 2 id_BEH_Walk "Idle"
+	SET_MESSAGE_INTERACTOR 2 id_MSG_Swing
+		Enable 1 DataBlock 2 id_MSG_Catch id_MSG_Initiate
+	SET_MESSAGE_INTERACTOR 2 id_MSG_Ping
+		Enable 0
+END_PLAN

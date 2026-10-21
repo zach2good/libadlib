@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "plan_name_of_40_flat.txt:2: error [compile/throw] (byte 67): This Plan file could not be opened: Data\\Plans\\PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\"beh\".txt",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "plan_name_of_40_flat.txt:2: error [compile/throw] (byte 67): This Plan file could not be opened: Data\\Plans\\PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\"beh\".txt",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "plan_name_of_40_flat.txt:2: error [compile/throw] (byte 67): This Plan file could not be opened: Data\\Plans\\PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\"beh\".txt",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

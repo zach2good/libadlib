@@ -1,0 +1,2 @@
+{DO_ACTION id_ACF_SendMessage id_PRT_ViewOwner id_MSG_Coin id_MSG_Done}
+END_PLAN

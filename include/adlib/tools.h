@@ -19,6 +19,7 @@
 #include <string_view>
 #include <vector>
 
+#include "adlib/compiler.h"
 #include "adlib/pbn.h"
 #include "adlib/runtime.h"
 #include "adlib/vocabulary.h"
@@ -33,6 +34,9 @@ public:
     struct Entry { std::string name; int value; std::string ns; };
 
     SymbolTable();
+    // Whose rules decide what a name compiles to: identifiers, pronoun tags, name limits, and the
+    // layout --symbols reads. Set it before loading.
+    Compat compat = Compat::Adlib;
     // Appends a symbol (compiler lookup order = order of add). Also adds it to vocab()'s `ns`.
     void add(const std::string &name, int value, const std::string &ns);
     // The compiler's lookup: case-insensitive, first match wins. nullptr when unknown.
@@ -41,6 +45,10 @@ public:
     static bool isIdentifier(std::string_view name);
     // Does the compiler tag this symbol as a pronoun (0xFEDC) ("PRN" at [3..5])?
     static bool isPronounName(std::string_view name);
+    // The same under `compat`: identifiers gain BC_ in 1998, and the tag (0 when none) is 0xFEDD
+    // for id_PRN_ and 0xFEDC for id_PRT_.
+    bool identifier(std::string_view name) const;
+    uint16_t pronounTag(std::string_view name) const;
     // Name of value `v` in namespace `ns` that compiles back to `v` ("" when none).
     std::string nameIn(const std::string &ns, int v) const;
     std::string roleName(Role r, int v) const; // nameIn(binding(r))
@@ -67,14 +75,29 @@ private:
     std::map<std::string, size_t> first_; // lower-case name -> entry index
 };
 
-// The 1996 compiler's symbol load (CPlanCompiler_LoadSymbols 0x48a240) from a directory in its
-// layout: enumIDs.h, then AnimData/Animassm.txt (AA_*), Sndfiles.lst (id_SND_<w>), Infobtxt.lst
-// (id_TXT_<w>), using the original tokenizer. Namespaces: enum names, "AnimAssm", "Sounds",
-// "InfoText".
-bool loadCompilerSymbolsDir(SymbolTable &t, const std::string &dataDir, std::string *err);
-// The same from individual files (adlibc's --enumids/--anims/--sounds/--texts); "" = skip.
+// The compiler's symbol load from a directory in its layout, using the original tokenizer.
+// 1996 (CPlanCompiler_LoadSymbols 0x48a240): enumIDs.h, then AnimData/Animassm.txt (AA_*),
+// Sndfiles.lst (id_SND_<w>), Infobtxt.lst (id_TXT_<w>); namespaces: enum names, "AnimAssm",
+// "Sounds", "InfoText". 1998 on (t.compat): CompilerSymbols::fromDataDir, and the reserved enums
+// (reservedACFIDs, reservedAgdIDs, reservedMsgIDs) also join their roles' namespaces.
+// `compiler`, when given, receives the compiler's own symbols (for DecompileOptions::verify).
+bool loadCompilerSymbolsDir(SymbolTable &t, const std::string &dataDir, std::string *err,
+                            const CompilerScene *scene = nullptr, CompilerSymbols *compiler = nullptr);
+// The same from individual files (adlibc's --reserved/--enumids/--anims/--sounds/--texts); "" =
+// skip. Infobtxt.lst is read only by the 1996 compiler, reservedEnumIDs.h only from 1998.
 bool loadCompilerSymbolFiles(SymbolTable &t, const std::string &enumIds, const std::string &animAssm,
-                             const std::string &sndFiles, const std::string &infobTxt, std::string *err);
+                             const std::string &sndFiles, const std::string &infobTxt, std::string *err,
+                             const std::string &reservedEnumIds = {}, const CompilerScene *scene = nullptr,
+                             CompilerSymbols *compiler = nullptr);
+// A 1998/1999 compiled scene (.sbn, written by the game's scene compiler 0x609F60): the object
+// types with their plans and messages, then every object with its id, type and collision
+// objects. Pass it to the compiler and the decompiler, and to the symbol loaders: its ids name
+// symbols.
+bool loadSceneFile(const std::string &path, CompilerScene &out, std::string *err);
+// Adds what the 1998/1999 compiler's lookups can see of `cs` (its first 5000 entries, up to the
+// first whose value is -1) to `t`, and lets the reserved enums (reservedACFIDs, reservedAgdIDs,
+// reservedMsgIDs) name their roles' low ids.
+void addCompilerSymbols(SymbolTable &t, const CompilerSymbols &cs);
 // An enum header (Vocabulary::loadEnumHeader rules).
 bool loadEnumFile(SymbolTable &t, const std::string &path, std::string *err);
 // One symbol per line (first token; '#' comments) into namespace `ns`.
@@ -82,7 +105,8 @@ bool loadListFile(SymbolTable &t, const std::string &ns, const std::string &path
 // A directory: the 1996 layout (enumIDs.h + AnimData/) -> loadCompilerSymbolsDir; otherwise every *.H
 // (enum headers, sorted) then every *.LST (lists; namespace = upper-case file stem; the stem
 // "VENDTEXT" style is kept as is).
-bool loadSymbolsDir(SymbolTable &t, const std::string &dir, std::string *err);
+bool loadSymbolsDir(SymbolTable &t, const std::string &dir, std::string *err, const CompilerScene *scene = nullptr,
+                    CompilerSymbols *compiler = nullptr);
 
 // =============================================================================================
 // Decompiler
@@ -97,11 +121,26 @@ struct DecompileOptions {
     // Behaviour names of other plans (upper-case plan name -> names), so CHANGE_OF_PLAN targets
     // are written by name. Requires the sibling source at compile time (grammar.md §5.3).
     const std::map<std::string, std::vector<std::string>> *planBehaviours = nullptr;
+    // 1998 on: the scene and the object the plan belongs to (CompilerScene::objectFor), which name
+    // the plan's messages. The 1999 prescan needs every SET_MESSAGE_INTERACTOR message by name.
+    const CompilerScene *scene = nullptr;
+    int16_t object = -1;
+    // 1998 on: write each top-level statement as a braced block when the 1999 compiler would
+    // rebuild it from one, then the rest of the plan in the flat form. Not with --annotate.
+    bool braced = false;
+    // The compiler's own symbols (for symbols.compat): the output is compiled again and must give
+    // the same dwords, or decompile fails ("not expressible") instead of returning wrong source.
+    // Braced output that fails is retried flat. Sibling plans named by CHANGE_OF_PLAN are
+    // stood in for by their behaviour names (planBehaviours).
+    const CompilerSymbols *verify = nullptr;
 };
-// Behaviour names in declaration order as the compiler's prescan sees them (spaces -> '_').
-std::vector<std::string> behaviourNames(const std::vector<uint32_t> &words);
-// The original compiler reads at most 79999 source bytes ("This plan file is too large").
+// Behaviour names in declaration order as the compiler's prescan sees them (spaces -> '_'). From
+// 1998, none when a declaration lacks its name: the prescan would pair the rest with later strings.
+std::vector<std::string> behaviourNames(const std::vector<uint32_t> &words, Compat compat = Compat::Adlib);
+// The largest source the original compiler accepts ("This plan file is too large" from 79 999
+// bytes on); the 1999 compiler's.
 constexpr size_t kMaxCompilerSource = 79998;
+constexpr size_t kMaxCompilerSource1999 = 399998;
 // Words (no u32 header) -> source text. False + err when the stream cannot be expressed
 // (e.g. a string containing '_'). On success `err` (if given) receives a warning when the text is
 // larger than kMaxCompilerSource, and is cleared otherwise.

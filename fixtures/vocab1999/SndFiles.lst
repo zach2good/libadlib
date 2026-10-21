@@ -1,0 +1,7 @@
+#SoundName	CallbackMessage	DirectoryIndex
+#The 1999 compiler names each line id_SND_<first word>
+Whistle1	id_MSG_Done	3
+Click	id_MSG_Done	3
+#Unused	id_MSG_Done	3
+CrowdRoar	id_MSG_Done	4
+22	id_MSG_Done	3

@@ -1,9 +1,11 @@
 // adlibc: compile ADLIB plan source (.txt) to a .PBN, byte-identical to the 1996 ADLIB compiler.
 // See docs/adlibc.md.
 //
-//   adlibc [--symbols DIR | --enumids F [--anims F] [--sounds F] [--texts F]]
-//          [--compat=adlib|adlib1996] [--plans-dir DIR] [--strict] [--Werror] [-o out.pbn] [-q] file.txt
+//   adlibc [--symbols DIR | [--reserved F] --enumids F [--anims F] [--sounds F] [--texts F]]
+//          [--compat=adlib|adlib1996|adlib1998|adlib1999] [--plans-dir DIR] [--strict] [--Werror]
+//          [--scene F.sbn] [-o out.pbn] [-q] file.txt
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -24,17 +26,25 @@ namespace {
 void usage() {
     std::fprintf(stderr,
         "usage: adlibc [symbols] [--compat=MODE] [--plans-dir DIR] [--strict] [--Werror] [-o OUT.pbn] [-q] FILE.txt\n"
-        "symbols (the four symbol files, read the way the 1996 compiler read them):\n"
-        "  --symbols DIR           a directory in the 1996 layout: enumIDs.h, AnimData/Animassm.txt,\n"
-        "                          Sndfiles.lst, Infobtxt.lst (names case-insensitive; any but\n"
-        "                          enumIDs.h may be missing)\n"
-        "  --enumids F --anims F --sounds F --texts F   individual files (any may be omitted)\n"
-        "compatibility (docs/adlibc.md):\n"
+        "symbols (read the way the chosen compiler read them):\n"
+        "  --symbols DIR           a directory in that compiler's layout. 1996: enumIDs.h,\n"
+        "                          AnimData/Animassm.txt, Sndfiles.lst, Infobtxt.lst. 1998 on:\n"
+        "                          reservedEnumIDs.h, enumIDs.h, AnimData/Animassm.txt, SndFiles.lst\n"
+        "                          (names case-insensitive; the lists may be missing)\n"
+        "  --reserved F --enumids F --anims F --sounds F --texts F   individual files\n"
+        "compatibility (docs/adlibc.md, docs/dialects.md):\n"
         "  --compat=adlib          (default) the ADLIB language, any vocabulary, with the 1996\n"
         "                          implementation limits lifted\n"
         "  --compat=adlib1996      the 1996 compiler exactly, including its fixed limits; input it\n"
         "                          would crash or hang on is an error, mangled-but-accepted input warns\n"
+        "  --compat=adlib1998      the 1998 language (Baseball 3D): adlib1999 without\n"
+        "                          SET_AGENDA_ITEM_PARAM\n"
+        "  --compat=adlib1999      the 1999 compiler exactly (Baseball 2000 and 2001)\n"
         "options:\n"
+        "  --scene F         1998 on: the scene the plan belongs to (objects, their ids and messages):\n"
+        "                    a compiled .sbn, or a stadium's .cfg built with the plan sources\n"
+        "  --object N        the scene object the plan is compiled for (default: the first whose type\n"
+        "                    lists the plan)\n"
         "  --plans-dir DIR   where CHANGE_OF_PLAN finds sibling plans (default: FILE's directory)\n"
         "  --strict          warn about input the original accepted silently (output unchanged)\n"
         "  --Werror          strict warnings are errors (no output is written)\n"
@@ -73,8 +83,9 @@ std::optional<std::string> findPlan(const std::string &dir, const std::string &n
 } // namespace
 
 int main(int argc, char **argv) {
-    std::string symDir, outPath, plansDir, input;
-    bool haveFiles = false, strict = false, werror = false, quiet = false, adlib1996 = false;
+    std::string symDir, outPath, plansDir, input, scenePath, objectArg;
+    bool haveFiles = false, strict = false, werror = false, quiet = false;
+    Compat compat = Compat::Adlib;
     SymbolFiles files;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -89,15 +100,21 @@ int main(int argc, char **argv) {
             dst = t;
             haveFiles = true;
         };
-        if (a == "--compat=adlib1996") adlib1996 = true;
-        else if (a == "--compat=adlib") adlib1996 = false;
-        else if (a.rfind("--compat=", 0) == 0) { std::fprintf(stderr, "adlibc: unknown mode %s (adlib, adlib1996)\n", a.c_str()); return 2; }
+        if (a.rfind("--compat=", 0) == 0) {
+            if (!parseCompat(a.substr(9), compat)) {
+                std::fprintf(stderr, "adlibc: unknown mode %s (adlib, adlib1996, adlib1998, adlib1999)\n", a.c_str());
+                return 2;
+            }
+        }
         else if (a == "--symbols") val(symDir);
+        else if (a == "--reserved") fileArg(files.reservedEnumIds);
         else if (a == "--enumids") fileArg(files.enumIds);
         else if (a == "--anims") fileArg(files.animAssm);
         else if (a == "--sounds") fileArg(files.sndFiles);
         else if (a == "--texts") fileArg(files.infobTxt);
         else if (a == "--plans-dir") val(plansDir);
+        else if (a == "--scene") val(scenePath);
+        else if (a == "--object") val(objectArg);
         else if (a == "--strict") strict = true;
         else if (a == "--Werror" || a == "-Werror") { werror = true; strict = true; }
         else if (a == "-o") val(outPath);
@@ -109,17 +126,56 @@ int main(int argc, char **argv) {
     }
     if (input.empty() || (symDir.empty() && !haveFiles)) { usage(); return 2; }
 
-    // --compat=adlib1996 enforces the original loader's limits on the symbol files; otherwise the
-    // headers are taken as written and anything the 1996 loader would have mishandled is reported
-    // under --strict.
+    if ((!scenePath.empty() || !objectArg.empty()) && !isLaterCompat(compat)) {
+        std::fprintf(stderr, "adlibc: --scene and --object need --compat=adlib1998 or adlib1999\n");
+        return 2;
+    }
+    if (!objectArg.empty() && scenePath.empty()) {
+        std::fprintf(stderr, "adlibc: --object needs --scene\n");
+        return 2;
+    }
+    if (plansDir.empty()) {
+        size_t s = input.find_last_of("/\\");
+        plansDir = s == std::string::npos ? "." : input.substr(0, s);
+    }
+    CompilerScene scene;
+    bool sceneSources = scenePath.size() > 4 && lower(scenePath.substr(scenePath.size() - 4)) == ".cfg";
+    if (!scenePath.empty() && !sceneSources) {
+        std::string text, err;
+        if (!readFile(scenePath, text) || !parseScene(text, scene, &err)) {
+            std::fprintf(stderr, "adlibc: %s: %s\n", scenePath.c_str(), err.empty() ? "cannot read" : err.c_str());
+            return 2;
+        }
+    }
+    if (sceneSources) { // a .cfg: build the scene from it and the plan sources, against the symbols alone
+        std::string text, err;
+        CompilerSymbols bare;
+        try {
+            if (!symDir.empty()) bare = CompilerSymbols::fromDataDir(symDir, compat, &err);
+            else bare = CompilerSymbols::fromFiles(files, compat);
+        } catch (const std::exception &e) {
+            err = e.what();
+        }
+        if (err.empty() && !readFile(scenePath, text)) err = "cannot read";
+        if (err.empty())
+            buildScene(text, bare, [&](const std::string &p) { return findPlan(plansDir, p); }, scene, &err);
+        if (!err.empty()) {
+            std::fprintf(stderr, "adlibc: %s: %s\n", scenePath.c_str(), err.c_str());
+            return 2;
+        }
+    }
+    const CompilerScene *scenePtr = scenePath.empty() ? nullptr : &scene;
+    // Each compiler reads the symbol files its own way. --compat=adlib1996 enforces the original
+    // loader's limits; otherwise the headers are taken as written, and anything the 1996 loader
+    // would have mishandled is reported under --strict.
     CompilerSymbols syms;
     try {
         if (!symDir.empty()) {
             std::string err;
-            syms = CompilerSymbols::fromDataDir(symDir, &err, adlib1996);
+            syms = CompilerSymbols::fromDataDir(symDir, compat, &err, scenePtr);
             if (!err.empty()) { std::fprintf(stderr, "adlibc: %s\n", err.c_str()); return 2; }
         } else {
-            syms = CompilerSymbols::fromFiles(files, adlib1996);
+            syms = CompilerSymbols::fromFiles(files, compat, scenePtr);
         }
     } catch (const std::exception &e) {
         std::fprintf(stderr, "adlibc: %s\n", e.what());
@@ -130,14 +186,23 @@ int main(int argc, char **argv) {
 
     std::string source;
     if (!readFile(input, source)) { std::fprintf(stderr, "adlibc: cannot read %s\n", input.c_str()); return 2; }
-    std::string base = input.substr(input.find_last_of('/') + 1);
+    std::string base = input.substr(input.find_last_of("/\\") + 1);
     std::string name = base.substr(0, base.find_last_of('.'));
-    if (plansDir.empty()) {
-        size_t s = input.find_last_of('/');
-        plansDir = s == std::string::npos ? "." : input.substr(0, s);
-    }
     CompileOptions opt;
-    opt.compat = adlib1996 ? Compat::Adlib1996 : Compat::Adlib;
+    opt.compat = compat;
+    opt.planName = name;
+    opt.scene = scenePtr;
+    if (scenePtr) opt.object = scene.objectFor(name);
+    if (!objectArg.empty()) {
+        char *end = nullptr;
+        long o = std::strtol(objectArg.c_str(), &end, 10);
+        if (*end || o < 0 || size_t(o) >= scene.objects.size()) {
+            std::fprintf(stderr, "adlibc: --object %s: the scene has objects 0 to %zu\n", objectArg.c_str(),
+                         scene.objects.size() ? scene.objects.size() - 1 : 0);
+            return 2;
+        }
+        opt.object = int16_t(o);
+    }
     opt.strict = strict;
     opt.werror = werror;
     opt.planSource = [&](const std::string &plan) -> std::optional<std::string> {

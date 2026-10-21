@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "interactor_param_needs_id.txt:2: error [compile/throw] (byte 26): Expected an argument enumerator.",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "throw",
+    "diagnostic": "interactor_param_needs_id.txt:2: error [compile/throw] (byte 26): Expected an argument enumerator.",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "interactor_param_needs_id.txt:2: error [compile/throw] (byte 26): Expected an argument enumerator.",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

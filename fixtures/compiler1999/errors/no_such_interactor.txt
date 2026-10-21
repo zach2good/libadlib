@@ -1,0 +1,2 @@
+SET_INTERACTOR_PARAM 3 id_SET_ActiveState "Nobody"
+END_PLAN

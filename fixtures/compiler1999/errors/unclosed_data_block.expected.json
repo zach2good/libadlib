@@ -1,0 +1,17 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "unclosed_data_block.txt:1: error [compile/hang] (byte 14): the source ends inside a block (the original compiler would hang)",
+  "pbn_sha256": null,
+  "expected_from": "adlibc (the original compiler hangs on this input)",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "hang",
+    "diagnostic": "unclosed_data_block.txt: hang: compile",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "unclosed_data_block.txt:1: error [compile/hang] (byte 14): the source ends inside a block (the original compiler would hang)",
+    "pbn_sha256": null
+  }
+}

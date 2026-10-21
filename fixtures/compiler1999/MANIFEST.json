@@ -1,0 +1,564 @@
+{
+  "about": "ADLIB 1999 compiler compatibility corpus. Every expectation was produced by the 1999 ADLIB compiler inside Baseball 2000's executable, run under emulation with the symbol files and scene in fixtures/vocab1999.",
+  "generator": "freeze1999.py (maintainer tool, not part of this package)",
+  "environment": {
+    "python": "3.14.2",
+    "unicorn": "2.1.4"
+  },
+  "binary": {
+    "path": "Baseball2000.exe",
+    "size": 2629632,
+    "sha256": "40fde7a85ce680b41d60b9250bb0fcaafa360d669d533dc4024de85f74a3a7cd"
+  },
+  "vocabulary": [
+    {
+      "path": "fixtures/vocab1999/SndFiles.lst",
+      "size": 210,
+      "sha256": "883a7f99953cc5f77994a7161969a4c0dbc72c79866d607ea18a7330b73a9b80"
+    },
+    {
+      "path": "fixtures/vocab1999/enumIDs.h",
+      "size": 1692,
+      "sha256": "747920f8e6f90496212363558ca9de8192b4846d6840d6455e0ee1e79ab11379"
+    },
+    {
+      "path": "fixtures/vocab1999/reservedEnumIDs.h",
+      "size": 549,
+      "sha256": "5c27a3b3a1fdcee0336095ee24c2a4b10edb65c06f5dbe23ef5ffabfa188176b"
+    },
+    {
+      "path": "fixtures/vocab1999/scene.sbn",
+      "size": 1645,
+      "sha256": "d6b8a24514b1c6ce4e0aa070f8049b464009a2d4d4a5d4e3a5bf12f19fe6fc6a"
+    },
+    {
+      "path": "fixtures/vocab1999/AnimData/Animassm.txt",
+      "size": 62,
+      "sha256": "20581abc80063f67005fd611c1256e2f7b58766d71335136887d07b31881966b"
+    }
+  ],
+  "fixtures": [
+    {
+      "case": "valid/bc_identifiers",
+      "sha256": "3bf791f7f69b793dfbe6f2b8655e513dfb05ec45d379ba5964866eaaeefcf348",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/behaviour_names_any_case",
+      "sha256": "d2a1d7a72a58500190c64443e3c4e307de8229ab14aa147d6aafd5b515a1e1d0",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/braced_comments",
+      "sha256": "cd0af8d6cc1432536cca68ecb49f37db62c861a36e66246feec0f66df4dcfdb3",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/braced_forms",
+      "sha256": "4ac3e2bd37a2e57c352a50d0fd64befddfeefca4fcf6ab379d566be6a7f05863",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/braced_then_flat",
+      "sha256": "fe6200fe9d3a20f9ef83ce9672638f1198fea53e5b320a2aba43b51b13c5cce1",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/change_of_plan_braced",
+      "sha256": "63536180b652597111afa8cddd649ae6bdb298804d48c5acfada78f0ee41ae12",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/change_of_plan_flat",
+      "sha256": "d93c09301bc29ddac786984b61b9572fd3fc6fa6e4457f675aabe8d47e3805d6",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/change_to_new_behavior_braced",
+      "sha256": "897d678cc98d144a6b683bf0477d6d176584ce7a3f982ab0dd5ccf11cdff80e2",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/change_to_new_behavior_flat",
+      "sha256": "71a67e1c6b3ffcf3ed1d852780ff10937357e0048814a8ee271ba34d6168cd75",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/change_to_new_behavior_number",
+      "sha256": "dc475c2b115ef6be46c05ec94ec9816752e541326873e49a8c69d05e195a1214",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/enum_value_skipped",
+      "sha256": "bc1adbf0111e2128eb5faab89aaa8ef953d49ae6eb94abc32272497deaeb28aa",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/flat_counts_as_specials",
+      "sha256": "70c41f4f2fbf536550452092d637383687aee59adfc13f5c7bc72735fb641767",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/flat_keywords_any_case",
+      "sha256": "96d51ae2f559d12c75d92f104d1ca457dca6153de379ee52218a9fa01bffe7a3",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/flat_minimal",
+      "sha256": "bc76fdf86619c97d0825d821dc81f90a35d31cfa9e542c131e77271929f51687",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/local_reals_and_names",
+      "sha256": "19f57949b019d90462b5e7c22b50ac0464d1ab396d32403b5df9d7658e96f6bb",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/long_string",
+      "sha256": "32d49e860e753c1a51f2c8741f7b6011caba32b849088d2ea5dfd76a82b5950b",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/many_comments_between_blocks",
+      "sha256": "7c26cab616a4272d4a43115ad6b8dbcf23c5175eca057c893c722196f3f88536",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/nesting_1200",
+      "sha256": "a366936e71c8e9b3fc36ca219dfa811905a09df655c45e9b36fb922651475bf6",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/numbers",
+      "sha256": "fe7e7feca6606d7971dd7622fecf31afe6e04846b59e780f22a7eda6891c0ae2",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/pronoun_tags",
+      "sha256": "8034a0714173e106f136fedb503849707766c9597d5636b0c97cfac70d9b8842",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/pronoun_tags_braced",
+      "sha256": "c6781cc28107b75c7ac384ef36483de983ef9bab7524f95ab7f5427cc57a7392",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/reserved_ids",
+      "sha256": "7e7ff808e5d19e6ac4f3b79d0087c3ba9ffd45ce7e4596c9f686eb293d27b5ae",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/send_to_number",
+      "sha256": "432e6b5dc870bc3aeb3dfbcb180d01f50e96e420b5de276e04ddcea0a1ee728a",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/set_agenda_item_param_braced",
+      "sha256": "42c51a8c6fb638c2c1e8dccfe6fd792b90a54fee4c4f2ac0b6b8b81aecd9dda4",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/set_agenda_item_param_flat",
+      "sha256": "8f8992ff2f994aa3821551d30d90832fc84e1443ae2e4d933788328c9d455406",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/sound_named_by_number",
+      "sha256": "59652267c9bdf171e715205bd5242a34468ff1a9386f3d26c1102b4c55b57b5e",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/specials_any_case",
+      "sha256": "8fce47eab53a9ee3c63f476b723b7d984fe1851a2663f4b0fdcf25616f0b3676",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/string_of_253",
+      "sha256": "a90fe11d02016c7cb5af4e54df053b1d73866f22cde91de1b762d01cf1664f02",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "valid/symbol_lists",
+      "sha256": "7348f1a0787111728a3c315efd8abb4b71b412a3407b9a207af07a27c613a87f",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/behaviour_name_overflow",
+      "sha256": "a3f351d8d02ea618ac0a96a20f70d4be891d265fced2a61752f0880bbe217c13",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/braced_brace_in_block_comment",
+      "sha256": "4d6efa7f6afffe676c208092602e72b7f2589a36e5d5a230e3ad2b0b39b94693",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/braced_close_after_a_space",
+      "sha256": "50ed9783dd0e65506ca390a3fb7a3e1109d914b71f3a09a9e873598a8532bf1d",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/braced_close_on_next_line",
+      "sha256": "9bb3ab61e19b48e0e3f5767d6a17e43ecb5c3b22b0e68cfbf88caaa52896b82f",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/braced_counts_tokens",
+      "sha256": "0f70be6c9a3165a47acd131dbaf88890dbff9e73826c93326dd8475fb169ef5a",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/braced_head_number",
+      "sha256": "2199f1013d2a1d6bd1083c2029c9871b9e1c1fc76837293c48ff95b23778a018",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/braced_unknown_unseen_between",
+      "sha256": "872b4f4b74ec2a14960ed3ea8f203da547dd75a95c03c3e85bbe9b8cb796994a",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/count_past_32767",
+      "sha256": "bdb1ea2c0b45d65fcde6226c18c14ce3e72a23dc20fd67eb2e78ba00038f019b",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/dwords_after_end",
+      "sha256": "d3e22e4b49e3814787303103b49754bf98b786d605deb157c0103b8ec913bace",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/enum_value_ignored",
+      "sha256": "5d60453f825f99d66728dae8f73b57e6641bd5135ad2a6d1e15679f8b3a1f9f9",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/prescan_skips_to_message",
+      "sha256": "0f557af4740d1017f6c20687e144b250347df5ffa71711aab3007f61a47dd525",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/send_broadcast_flag_outlives",
+      "sha256": "dba29adf68e8223f69eba7c1b173b5dcf8bd0168f7da7980dc2f4944cbf06bd8",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/send_broadcast_flat",
+      "sha256": "5a6326ff4a783e0f1a1ace9c66ab3fd8bf55bad54683f6f0bfff4ba3f78dfccd",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/send_pronoun_braced",
+      "sha256": "e3b9af05a54a38305327f9ca7db13448d04e38983749ec672fdb5f0b14099981",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/set_agenda_item_param_short_count",
+      "sha256": "b2e98d714bac67d73a01598d88600b9314e33aca455fe4713743aed057b3771a",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/unknown_identifier_dropped",
+      "sha256": "35874ee5ee627e43b8d3807318f0c5fdb16e870e61827167c1f676af38240a3f",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/unknown_message_is_minus_one",
+      "sha256": "b58156bc2804b6b24dfb0a2ae5f5945bac80fdb244cab6938e99320946d69e82",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "quirks/upper_case_id_is_a_word",
+      "sha256": "842dcb88910bacf1d12e72e0bf4a522e2aef2717d87dbe031c03fb162169cdeb",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/abort_end_plan_braced",
+      "sha256": "b094e49db275455c519a25e568d510f7d8289cbd9560992231d6e6a78c3ddd1e",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/abort_no_output_keyword",
+      "sha256": "f9fb7544b6b2d71acb52b52ff0fa3713125455fe0969ef4114067139a31658e3",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/abort_stray_close",
+      "sha256": "59ac5fb2b99817a96c3e844b493f8fd2d7bf8f60d9a08ecf8d6953b3eebaa952",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/abort_unknown_keyword",
+      "sha256": "6a7b0ba1cf3687bb52294e745c2e9ddb9fdf31aeecb060e44902d9fb0a839a8d",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/bad_number",
+      "sha256": "123117c2541aeaf966dcb98eb87a3835b6b2af94628e5d2f4aade718b6d7c865",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/bad_number_braced",
+      "sha256": "a3d9cd6962e93f3e43133e65241b4fe33a7d97da7c1c233172409f4067bf0686",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/behaviour_name_spill",
+      "sha256": "b3fd37ff28b9398f3036820a323bfc5dcfc77305d7095167f39e9bc30dac8904",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler crashes on this input)"
+    },
+    {
+      "case": "errors/behaviour_without_name",
+      "sha256": "178ad24f06e477b19db079d9943902899d2720b645c63d6e20898baf60d813a9",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler hangs on this input)"
+    },
+    {
+      "case": "errors/brace_in_line_comment",
+      "sha256": "ea2eeabb73cb6bf4b4dacad07faa35df934e28ef99c510b3dc3e25467dbf1571",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/braced_keyword_glued",
+      "sha256": "16ce6161a8e1da88ff8ea8c3483d9827e2e694f781ba344d17c0b41034171903",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/comment_without_line_end_braced",
+      "sha256": "c133949206b7fa7f3aee276450e17735d9a986d0e2f9eca71d29dff6ca1288d2",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler crashes on this input)"
+    },
+    {
+      "case": "errors/hash_comment_between_blocks",
+      "sha256": "02c3e56a76ec8ff08a33270f3353c975486f3226908fa0b35060a4436ef259c5",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler crashes on this input)"
+    },
+    {
+      "case": "errors/hex_without_digits",
+      "sha256": "a206ab5ad545cda641d25a60379a3936a56a4fa565d9264980723d050b1cb441",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler emits uninitialised memory on this input)"
+    },
+    {
+      "case": "errors/interactor_name_needs_string",
+      "sha256": "81ea279ecb2923a5b7f5dbeffc195bba19bae7fdb87e437cb59f929d98bc7753",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/interactor_param_needs_id",
+      "sha256": "f6a86e02d2421b17ea22246a30d824d4f94f657c8d1d674ef4eb95c0a5e5cbc7",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/local_reals_need_count",
+      "sha256": "7689fe2b5fbef823ab770ef231f33159e35df7308f7f6413a06f2243223290ac",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/local_reals_need_names",
+      "sha256": "6f9d2e5151cf0ce02b5660f7f4e0d7892b55c63e7077b70cc23012d92ecb4856",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/locals_count_not_symbol",
+      "sha256": "75f02d0ee36501e9140b97d69642f9a0567ebbf2b5103b5cfdcf929217ddc9b5",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler emits uninitialised memory on this input)"
+    },
+    {
+      "case": "errors/nesting_1300",
+      "sha256": "de4664c1e68176db428b9743c9040ab379ba347008270363acd522cc5266e562",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler crashes on this input)"
+    },
+    {
+      "case": "errors/no_end_plan",
+      "sha256": "0b91d9f1cf351ab10d2b3f58e4f9124253137ace5e7feb0e5ad0782bdf76c143",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/no_such_behavior",
+      "sha256": "9064d14113a178e7e2a7a20498474a28eb1ff6da55e47b2e1c05b33100ca201e",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/no_such_behavior_braced",
+      "sha256": "60f9a37052f1dcb0a83287c91e145d3e2ed73f593c2948bb72f2b19a725d2ef7",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/no_such_interactor",
+      "sha256": "70f1a204a55e8eea94c5ff3ecd941fea69aa4e31e93493f7c137d78545229176",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/no_such_plan",
+      "sha256": "3ea186d12749afd455d816b0f1de3a87e563575be8a781f8c2e62db5f268d114",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/plan_name_of_172_braced",
+      "sha256": "f0ea515729407d18ad1ab6f38805e1d535b830b44c50741721abc3b6c26994cc",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/plan_name_of_40_flat",
+      "sha256": "811e8e57d3adeb157b5a5106e16640f3d1560390a44ddcf1bafa239f114107ea",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/plan_not_found_long_message",
+      "sha256": "f88b7d67453dc8d2c938bc2151975650351e2d60b426258d71f5de6d8030f967",
+      "outcome": "rejected",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "errors/string_of_254",
+      "sha256": "e02d8dcae88dc308ffdbd285f8e91ed7ff6efd08ee8bb46613bfdabed975e068",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler crashes on this input)"
+    },
+    {
+      "case": "errors/string_without_closing_quote",
+      "sha256": "7244b7efbef8e7b43d239ad99b6f81604c248467efa1624e46e5d362a64b706a",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler emits uninitialised memory on this input)"
+    },
+    {
+      "case": "errors/token_of_256_bytes",
+      "sha256": "4ef1d6fa24d03d2dd1e159d30c9cd68fbced2ae18af18f92776126aedc815d7f",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler crashes on this input)"
+    },
+    {
+      "case": "errors/unclosed_block",
+      "sha256": "6dabfbdf6a1078bc3451d1fb9e2d1af6049baf2e00a2b22f38d09578bc363322",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler hangs on this input)"
+    },
+    {
+      "case": "errors/unclosed_data_block",
+      "sha256": "17282f3797c52e4dabbbc2d52120d25a4097b10e9390ab45b940b83ef6391ebf",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler hangs on this input)"
+    },
+    {
+      "case": "scene/broadcast",
+      "sha256": "6cfba656d4fd84475f8dc2f1c021dbb2bd3fc736ae22c0db8abb5ef6b09f89d8",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "scene/broadcast_indices",
+      "sha256": "5a649bd55c592dd978e6b51229989a99c0daa43e3ebf44523abdf7cf924ac151",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "scene/object_ids",
+      "sha256": "66b14f9d6ac2b9f0ece34d6d8cb0f2e3b0937cd09aec69dc045c2d154a103e70",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "scene/other_object",
+      "sha256": "20857543da338b7cedb01964c18b4af30d272fffb57c9723f0f92cddb2b62472",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "scene/own_messages",
+      "sha256": "484a5e537a006b0bde9d8490ed3792482ab85411f9ea563142d1a76286c941c0",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "scene/send_braced",
+      "sha256": "b65730ea6c7bca3dc9fab7e5035b2227f5b4e77e93e905b5c7b6eed4e736b110",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "scene/send_switches_table",
+      "sha256": "39e849faa0e8f4a496944bdccbc973febac32f77683e3b6a2b2c20725e05c543",
+      "outcome": "accepted",
+      "expected_from": "oracle"
+    },
+    {
+      "case": "scene/send_to_missing_object",
+      "sha256": "6514a6f61ce1a0aeb9d8120967edec7a0e7d27de9e556e9c2e0406b7aa43e96f",
+      "outcome": "rejected",
+      "expected_from": "adlibc (the original compiler crashes on this input)"
+    }
+  ]
+}

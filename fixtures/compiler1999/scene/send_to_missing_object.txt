@@ -1,0 +1,3 @@
+// object 0
+DO_ACTION 4 id_ACF_SendMessage id_COB_Hands id_MSG_Catch 1
+END_PLAN

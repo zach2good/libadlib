@@ -32,6 +32,11 @@ struct PrescanFacts {
 };
 
 
+// The 1998/1999 compiler (later.cpp).
+CompileResult compileLater(std::string_view source, const CompilerSymbols &symbols, const CompileOptions &opt);
+std::vector<CompilerSymbol> loadSymbols1999(const SymbolFiles &files, const CompilerScene *scene,
+                                           std::vector<std::string> &warnings);
+
 void strictAnalysis(std::string_view source, const CompilerSymbols &syms,
                     const std::vector<TokenRec> &recs, const std::vector<uint32_t> &words,
                     const PrescanFacts &pre, bool adlib1996, std::vector<Diagnostic> &out);

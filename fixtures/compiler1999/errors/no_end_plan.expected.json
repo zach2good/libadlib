@@ -1,0 +1,18 @@
+{
+  "outcome": "rejected",
+  "diagnostic": "no_end_plan.txt: error [write/no-end]: no END_PLAN (0xFFFF0000) in output; the original WritePbn would overrun its buffer",
+  "pbn_sha256": null,
+  "expected_from": "oracle",
+  "oracle": {
+    "outcome": "rejected",
+    "kind": "no-end",
+    "diagnostic": "no_end_plan.txt: error [write/no-end]: no END_PLAN (0xFFFF0000) in output; the original WritePbn would overrun its buffer",
+    "pbn_sha256": null
+  },
+  "adlibc": {
+    "outcome": "rejected",
+    "diagnostic": "no_end_plan.txt: error [write/no-end]: no END_PLAN (0xFFFF0000) in output; the original WritePbn would overrun its buffer",
+    "pbn_sha256": null
+  },
+  "adlibc_agrees": true
+}

@@ -2,14 +2,16 @@
 
 `adlibc` compiles ADLIB plan source (`.txt`) into the binary plans (`.PBN`) the ADLIB runtime
 loads. It reproduces the 1996 ADLIB compiler (the one Wizbang! shipped inside HyperBlade's
-executable) **byte for byte**: the same bytes for every input the original accepts, the same
+executable) **byte for byte**, and the 1999 one (inside Baseball 2000's) with `--compat=adlib1999`
+([dialects.md](dialects.md), [language-1999.md](language-1999.md)): the same bytes for every input the original accepts, the same
 diagnostic, line and byte offset for every input it rejects. The language is specified in
 [language.md](language.md); the compiler's internals are in `src/compiler/` (API:
 `include/adlib/compiler.h`).
 
 ```
-adlibc [--symbols DIR | --enumids F [--anims F] [--sounds F] [--texts F]]
-       [--compat=adlib|adlib1996] [--plans-dir DIR] [--strict] [--Werror] [-o OUT.pbn] [-q] FILE.txt
+adlibc [--symbols DIR | [--reserved F] --enumids F [--anims F] [--sounds F] [--texts F]]
+       [--compat=adlib|adlib1996|adlib1998|adlib1999] [--scene F.SBN [--object N]]
+       [--plans-dir DIR] [--strict] [--Werror] [-o OUT.pbn] [-q] FILE.txt
 ```
 
 | option | meaning |
@@ -18,6 +20,11 @@ adlibc [--symbols DIR | --enumids F [--anims F] [--sounds F] [--texts F]]
 | `--enumids F --anims F --sounds F --texts F` | the files individually (any may be omitted) |
 | `--compat=adlib` | (default) the ADLIB language with the 1996 implementation limits lifted; see below |
 | `--compat=adlib1996` | the 1996 compiler exactly, limits included; see below |
+| `--compat=adlib1999` | the 1999 compiler exactly (Baseball 2000 and 2001): braced blocks, case-insensitive names, the symbol files in the 1998 layout ([language-1999.md](language-1999.md)) |
+| `--compat=adlib1998` | the 1998 language (Baseball 3D): `adlib1999` without `SET_AGENDA_ITEM_PARAM` |
+| `--reserved F` | 1998 on: `reservedEnumIDs.h`, read before `--enumids` |
+| `--scene F` | 1998 on: the scene the plan is compiled for (its object ids, collision ids and message lists): a compiled `.sbn`, or a stadium's `.cfg`, built with the plan sources in `--plans-dir` ([dialects.md](dialects.md) §3) |
+| `--object N` | the scene object the plan belongs to (default: the first whose type lists the plan) |
 | `--plans-dir DIR` | where `CHANGE_OF_PLAN` finds sibling plans' sources (default: FILE's directory) |
 | `--strict` | extra warnings for input the 1996 compiler accepted silently; never changes the output |
 | `--Werror` | warnings are errors: nothing is written |
@@ -43,7 +50,21 @@ files (the vending machine uses `VENDING.H` and `VENDTEXT.LST`). A host that alr
 `Vocabulary` can compile against it directly (`CompilerSymbols::fromVocabulary`): namespaces in
 creation order, ids as given. `adlibc_test` checks that both routes agree.
 
-## The two compatibility modes
+## The 1998 and 1999 modes
+
+`--compat=adlib1999` is the 1999 compiler as `--compat=adlib1996` is the 1996 one. It gives the
+same bytes and diagnostics as the original, and refuses input on which the original crashes,
+hangs, writes past its object or reads memory nothing in the compile wrote (kinds `crash`,
+`hang`, `corrupt`, `undefined`). It reads the symbol files the 1999 way: `reservedEnumIDs.h`
+first, values after `=` skipped, MSG/AGD/ACF enums starting at 4/1/2, no `Infobtxt.lst`.
+`--compat=adlib1998` is the same compiler without the keyword `SET_AGENDA_ITEM_PARAM`, which the
+1998 games do not have.
+
+Both need the scene for any plan that names a scene object or a message the symbol files lack
+(in the Baseball games, every message beyond the four reserved ones). `--strict` adds only the tree lint in these modes. The evidence is in
+[compatibility.md](compatibility.md) §4.
+
+## The two 1996 modes
 
 Two claims, one per mode:
 
@@ -148,6 +169,8 @@ original is found it first becomes a permanent fixture, then adlibc is fixed
 ([../CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 ## Compatibility evidence
+
+For the 1998 and 1999 modes, see [compatibility.md](compatibility.md) §4. For the 1996 modes:
 
 Summarised here, in full in [compatibility.md](compatibility.md). All of it was produced by
 running the original 1996 compiler (inside HyperBlade's executable, under emulation) next to

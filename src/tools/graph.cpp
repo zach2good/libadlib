@@ -32,7 +32,7 @@ struct Analyzer {
     std::string name(Role r, int v) const { return syms ? syms->displayName(r, v) : std::to_string(v); }
 
     std::string valueName(uint32_t v, Role r) const {
-        if ((v >> 16) == kTagPronoun) return "Prn:" + name(Role::Pronoun, int(v & 0xFFFF));
+        if (isPronounTag(uint16_t(v >> 16))) return "Prn:" + name(Role::Pronoun, int(v & 0xFFFF));
         if (v == kBroadcast) return "Broadcast";
         return name(r, int32_t(v));
     }
